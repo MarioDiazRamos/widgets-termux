@@ -6,7 +6,7 @@
 # ========================================
 
 # CONFIGURACIÓN (personaliza esta URL con tu repositorio)
-REPO_URL="https://github.com/TU-USUARIO/widgets-termux.git"  # Cambia por tu repo
+REPO_URL="https://github.com/MarioDiazRamos/widgets-termux.git"  # Tu repositorio configurado
 CARPETA_WIDGETS="$HOME/widgets-termux"
 CARPETA_SHORTCUTS="$HOME/.shortcuts"
 
