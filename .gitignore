@@ -1,0 +1,30 @@
+# Ignorar archivos temporales comunes
+*.tmp
+*.log
+*.bak
+*.backup
+*.respaldo
+
+# Ignorar archivos IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignorar archivos del sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Ignorar datos sensibles
+*.key
+*.env
+config.local.*
+
+# Ignorar artefactos de construcción
+dist/
+build/
+*.exe
+
+# Ignorar archivos específicos de Windows
+*.lnk
