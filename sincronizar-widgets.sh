@@ -38,6 +38,13 @@ if [ ! -d "$CARPETA_SHORTCUTS" ]; then
     mkdir -p "$CARPETA_SHORTCUTS"
 fi
 
+# Asegurar que .shortcuts esté en PATH
+if [[ ":$PATH:" != *":$HOME/.shortcuts:"* ]]; then
+    mostrar_info "Añadiendo ~/.shortcuts al PATH"
+    export PATH="$HOME/.shortcuts:$PATH"
+    echo 'export PATH="$HOME/.shortcuts:$PATH"' >> ~/.bashrc
+fi
+
 # Verificar si es primera vez (clonar) o actualización (pull)
 if [ ! -d "$CARPETA_WIDGETS" ]; then
     mostrar_info "Primera vez: clonando repositorio..."
@@ -88,16 +95,38 @@ for ruta_script in "$CARPETA_WIDGETS"/*; do
     # Obtener nombre del script
     nombre_script=$(basename "$ruta_script")
     
-    # Saltar archivos de configuración
+    # Saltar archivos de configuración y documentación
     case "$nombre_script" in
-        README.md|.git*|*.md|LICENSE|configurar-*|INSTRUCCIONES-*)
+        README.md|.git*|*.md|LICENSE|configurar-*|INSTRUCCIONES-*|*.ps1)
             continue
             ;;
     esac
     
     ruta_shortcut="$CARPETA_SHORTCUTS/$nombre_script"
     
-    # Verificar si ya existe el enlace
+    # Para archivos .py, crear enlace sin extensión también
+    if [[ "$nombre_script" == *.py ]]; then
+        nombre_sin_extension="${nombre_script%.py}"
+        ruta_shortcut_sin_ext="$CARPETA_SHORTCUTS/$nombre_sin_extension"
+        
+        # Crear enlace sin extensión
+        if [ -L "$ruta_shortcut_sin_ext" ]; then
+            if [ "$(readlink "$ruta_shortcut_sin_ext")" = "$ruta_script" ]; then
+                mostrar_info "✓ $nombre_sin_extension (ya vinculado)"
+            else
+                rm "$ruta_shortcut_sin_ext"
+                ln -s "$ruta_script" "$ruta_shortcut_sin_ext"
+                mostrar_info "Revinculado $nombre_sin_extension"
+            fi
+        else
+            ln -s "$ruta_script" "$ruta_shortcut_sin_ext"
+            mostrar_info "Vinculando nuevo script: $nombre_sin_extension"
+            scripts_nuevos=$((scripts_nuevos + 1))
+        fi
+        chmod +x "$ruta_shortcut_sin_ext" 2>/dev/null
+    fi
+    
+    # Crear enlace con nombre completo
     if [ -L "$ruta_shortcut" ]; then
         # Ya existe, verificar si apunta al lugar correcto
         if [ "$(readlink "$ruta_shortcut")" = "$ruta_script" ]; then
@@ -122,8 +151,9 @@ for ruta_script in "$CARPETA_WIDGETS"/*; do
         scripts_nuevos=$((scripts_nuevos + 1))
     fi
     
-    # Dar permisos ejecutables al script original
+    # Dar permisos ejecutables al script original y al enlace
     chmod +x "$ruta_script"
+    chmod +x "$ruta_shortcut" 2>/dev/null
     scripts_procesados=$((scripts_procesados + 1))
 done
 
