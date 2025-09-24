@@ -73,10 +73,13 @@ else
     else
         mostrar_advertencia "No se pudo hacer pull. Descargando archivos individualmente..."
         # Fallback: descargar archivos críticos manualmente
-        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/agentevoz" -o "agentevoz"
-        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/agente.py" -o "agente.py"
-        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/descarga.sh" -o "descarga.sh"
+        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/agentevoz" -o "agentevoz" 2>/dev/null
+        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/agente.py" -o "agente.py" 2>/dev/null
+        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/descarga.sh" -o "descarga.sh" 2>/dev/null
+        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/clima" -o "clima" 2>/dev/null
+        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/clima.sh" -o "clima.sh" 2>/dev/null
         mostrar_info "Archivos principales descargados"
+        chmod +x agentevoz agente.py descarga.sh clima clima.sh 2>/dev/null
     fi
 fi
 
