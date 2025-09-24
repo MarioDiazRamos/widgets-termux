@@ -60,26 +60,38 @@ else
     
     # Verificar si es un repositorio Git válido
     if [ ! -d ".git" ]; then
-        mostrar_advertencia "No es un repositorio Git válido. Reinicializando..."
-        git init
-        git remote add origin "$REPO_URL"
-        git config user.name "termux-user"
-        git config user.email "user@termux.local"
-    fi
-    
-    # Intentar actualizar
-    if git pull origin main 2>/dev/null || git pull origin master 2>/dev/null; then
-        mostrar_exito "Repositorio actualizado exitosamente"
+        mostrar_advertencia "No es un repositorio Git válido. Descargando archivos directamente..."
+        # Descargar todos los archivos principales
+        mostrar_info "Descargando agentevoz..."
+        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/agentevoz" -o "agentevoz" 2>/dev/null && chmod +x "agentevoz"
+        mostrar_info "Descargando agente.py..."
+        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/agente.py" -o "agente.py" 2>/dev/null && chmod +x "agente.py"
+        mostrar_info "Descargando descarga.sh..."
+        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/descarga.sh" -o "descarga.sh" 2>/dev/null && chmod +x "descarga.sh"
+        mostrar_info "Descargando clima..."
+        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/clima" -o "clima" 2>/dev/null && chmod +x "clima"
+        mostrar_info "Descargando clima.sh..."
+        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/clima.sh" -o "clima.sh" 2>/dev/null && chmod +x "clima.sh"
+        mostrar_exito "Archivos descargados directamente"
     else
-        mostrar_advertencia "No se pudo hacer pull. Descargando archivos individualmente..."
-        # Fallback: descargar archivos críticos manualmente
-        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/agentevoz" -o "agentevoz" 2>/dev/null
-        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/agente.py" -o "agente.py" 2>/dev/null
-        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/descarga.sh" -o "descarga.sh" 2>/dev/null
-        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/clima" -o "clima" 2>/dev/null
-        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/clima.sh" -o "clima.sh" 2>/dev/null
-        mostrar_info "Archivos principales descargados"
-        chmod +x agentevoz agente.py descarga.sh clima clima.sh 2>/dev/null
+        # Intentar git pull
+        if git pull origin main 2>/dev/null || git pull origin master 2>/dev/null; then
+            mostrar_exito "Repositorio actualizado exitosamente"
+        else
+            mostrar_advertencia "Git pull falló. Descargando archivos directamente..."
+            # Fallback: descargar archivos críticos manualmente
+            mostrar_info "Descargando agentevoz..."
+            curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/agentevoz" -o "agentevoz" 2>/dev/null && chmod +x "agentevoz"
+            mostrar_info "Descargando agente.py..."
+            curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/agente.py" -o "agente.py" 2>/dev/null && chmod +x "agente.py"
+            mostrar_info "Descargando descarga.sh..."
+            curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/descarga.sh" -o "descarga.sh" 2>/dev/null && chmod +x "descarga.sh"
+            mostrar_info "Descargando clima..."
+            curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/clima" -o "clima" 2>/dev/null && chmod +x "clima"
+            mostrar_info "Descargando clima.sh..."
+            curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/clima.sh" -o "clima.sh" 2>/dev/null && chmod +x "clima.sh"
+            mostrar_exito "Archivos descargados como fallback"
+        fi
     fi
 fi
 
