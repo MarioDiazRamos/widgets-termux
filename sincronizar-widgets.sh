@@ -158,7 +158,6 @@ for ruta_script in "$CARPETA_WIDGETS"/*; do
 done
 
 echo ""
-echo "===================================="
 mostrar_exito "¡Sincronización completada!"
 echo ""
 echo "📊 Estadísticas:"
@@ -166,6 +165,14 @@ echo "   • Scripts procesados: $scripts_procesados"
 echo "   • Scripts nuevos: $scripts_nuevos" 
 echo "   • Scripts actualizados: $scripts_actualizados"
 echo ""
+
+# Crear enlace del sincronizador para sí mismo
+mostrar_info "Configurando acceso directo al sincronizador..."
+ln -sf "$CARPETA_WIDGETS/sincronizar-widgets.sh" "$CARPETA_SHORTCUTS/sincronizar-widgets"
+ln -sf "$CARPETA_WIDGETS/sincronizar-widgets.sh" "$CARPETA_SHORTCUTS/sync"
+chmod +x "$CARPETA_SHORTCUTS/sincronizar-widgets" 2>/dev/null
+chmod +x "$CARPETA_SHORTCUTS/sync" 2>/dev/null
+mostrar_exito "✓ Sincronizador disponible como: sincronizar-widgets, sync"
 
 # Verificar si hay scripts huérfanos en .shortcuts
 mostrar_info "Verificando scripts huérfanos..."
@@ -195,4 +202,11 @@ fi
 
 echo ""
 mostrar_exito "🎉 ¡Widgets listos para usar desde el widget de Termux!"
-mostrar_info "💡 Recuerda reiniciar el widget o el dispositivo para ver los cambios"
+mostrar_info "💡 Comandos disponibles desde cualquier lugar:"
+mostrar_info "   • agentevoz (agente de voz)"
+mostrar_info "   • agente (agente de texto)" 
+mostrar_info "   • descarga (descargador YouTube)"
+mostrar_info "   • sincronizar-widgets (actualizar scripts)"
+mostrar_info "   • sync (atajo para sincronizar-widgets)"
+echo ""
+mostrar_info "🔄 Si no aparecen en el widget, ejecuta: termux-reload-settings"
