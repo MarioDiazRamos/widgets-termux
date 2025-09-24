@@ -50,11 +50,26 @@ if [ ! -d "$CARPETA_WIDGETS" ]; then
 else
     mostrar_info "Actualizando repositorio existente..."
     cd "$CARPETA_WIDGETS"
+    
+    # Verificar si es un repositorio Git válido
+    if [ ! -d ".git" ]; then
+        mostrar_advertencia "No es un repositorio Git válido. Reinicializando..."
+        git init
+        git remote add origin "$REPO_URL"
+        git config user.name "termux-user"
+        git config user.email "user@termux.local"
+    fi
+    
+    # Intentar actualizar
     if git pull origin main 2>/dev/null || git pull origin master 2>/dev/null; then
         mostrar_exito "Repositorio actualizado exitosamente"
     else
-        mostrar_error "Error al actualizar el repositorio"
-        exit 1
+        mostrar_advertencia "No se pudo hacer pull. Descargando archivos individualmente..."
+        # Fallback: descargar archivos críticos manualmente
+        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/agentevoz" -o "agentevoz"
+        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/agente.py" -o "agente.py"
+        curl -sL "${REPO_URL/github.com/raw.githubusercontent.com}/main/descarga.sh" -o "descarga.sh"
+        mostrar_info "Archivos principales descargados"
     fi
 fi
 
@@ -75,7 +90,7 @@ for ruta_script in "$CARPETA_WIDGETS"/*; do
     
     # Saltar archivos de configuración
     case "$nombre_script" in
-        README.md|.git*|*.md|LICENSE|configurar-*|instrucciones-*)
+        README.md|.git*|*.md|LICENSE|configurar-*|INSTRUCCIONES-*)
             continue
             ;;
     esac
