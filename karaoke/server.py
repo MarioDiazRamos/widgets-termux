@@ -243,81 +243,97 @@ def transponer_audio():
 
 # Mezclar audio y video (karaoke)
 @app.route("/api/karaoke", methods=["POST"])
-def mezclar_karaoke():
-    datos = request.json or {}
-    audio = datos.get("audio")
-    opcion_sincronizar = int(datos.get("sync_option", 1))
-    retardo_sincro = float(datos.get("sync_delay", 0))
-    ruta_video = datos.get("video_path")
-    inicio_audio = float(datos.get("audio_start_sec", 0))
-
-    ruta_audio = None
-    if isinstance(audio, str) and audio.startswith("/"):
-        ruta_audio = ruta_valida(audio, [DESCARGAS])
-    else:
-        for a in listar_archivos(DESCARGAS, [".m4a", ".flac"]):
-            if a["nombre"] == audio:
-                ruta_audio = a["ruta"]
-                break
-    if not ruta_audio:
-        return jsonify({"error": "audio no encontrado"}), 400
-    salida_final = os.path.join(
-        DESTINO,
-        f"{os.path.splitext(os.path.basename(ruta_audio))[0]}_final_{int(time.time())}.mp4",
-    )
+def _obtener_parametros_calidad(datos):
+    """Obtiene los parámetros de calidad y velocidad de codificación."""
     calidad = datos.get("output_quality", "media")
     velocidad = datos.get("output_speed", "equilibrada")
     crf_map = {"alta": "18", "media": "23", "baja": "28"}
     preset_map = {"rapida": "veryfast", "equilibrada": "medium", "lenta": "slow"}
-    crf = crf_map.get(calidad, "23")
-    preset = preset_map.get(velocidad, "medium")
-    comando = ["ffmpeg", "-y"]
+    return crf_map.get(calidad, "23"), preset_map.get(velocidad, "medium")
+
+
+def _buscar_video_para_karaoke(ruta_video):
+    """Busca y valida un archivo de video para karaoke."""
+    if not ruta_video:
+        return None
+
+    if isinstance(ruta_video, str) and ruta_video.startswith("/"):
+        return ruta_valida(ruta_video, [VIDEOS])
+
+    for v in listar_archivos(VIDEOS, [".mp4"]):
+        if v["nombre"] == ruta_video:
+            return v["ruta"]
+    return None
+
+
+def _construir_comando_con_video(video_completo, ruta_audio, datos, salida_final, crf, preset):
+    """Construye el comando FFmpeg para mezclar video y audio."""
+    opcion_sincronizar = int(datos.get("sync_option", 1))
+    retardo_sincro = float(datos.get("sync_delay", 0))
+    inicio_audio = float(datos.get("audio_start_sec", 0))
+
+    comando = ["ffmpeg", "-y", "-ss", "0", "-i", video_completo, "-ss", "0", "-i", ruta_audio]
+
+    if inicio_audio > 0:
+        comando += ["-ss", str(inicio_audio)]
+
+    # Aplicar opciones de sincronización
+    if opcion_sincronizar == 1:
+        comando += ["-map", "0:v:0", "-map", "1:a:0"]
+    elif opcion_sincronizar == 2:
+        comando += ["-ss", str(retardo_sincro), "-map", "0:v:0", "-map", "1:a:0"]
+    else:
+        comando += ["-itsoffset", str(retardo_sincro), "-map", "0:v:0", "-map", "1:a:0"]
+
+    # Añadir opciones de codificación
+    comando += [
+        "-c:v", "libx264", "-preset", preset, "-crf", crf,
+        "-c:a", "aac", "-b:a", "192k", "-shortest", salida_final,
+    ]
+    return comando
+
+
+def _construir_comando_solo_audio(ruta_audio, datos, salida_final):
+    """Construye el comando FFmpeg para procesar solo audio."""
+    inicio_audio = float(datos.get("audio_start_sec", 0))
+    comando = ["ffmpeg", "-y", "-ss", "0", "-i", ruta_audio]
+
+    if inicio_audio > 0:
+        comando += ["-ss", str(inicio_audio)]
+
+    comando += ["-c:a", "aac", "-b:a", "192k", salida_final]
+    return comando
+
+
+def mezclar_karaoke():
+    datos = request.json or {}
+    audio = datos.get("audio")
+    ruta_video = datos.get("video_path")
+
+    # Buscar archivo de audio
+    ruta_audio = _buscar_archivo_audio(audio)
+    if not ruta_audio:
+        return jsonify({"error": "audio no encontrado"}), 400
+
+    # Generar nombre de salida
+    base_nombre = os.path.splitext(os.path.basename(ruta_audio))[0]
+    salida_final = os.path.join(DESTINO, f"{base_nombre}_final_{int(time.time())}.mp4")
+
+    # Obtener parámetros de calidad
+    crf, preset = _obtener_parametros_calidad(datos)
+
+    # Construir comando según si hay video o no
     if ruta_video:
-        if isinstance(ruta_video, str) and ruta_video.startswith("/"):
-            video_completo = ruta_valida(ruta_video, [VIDEOS])
-        else:
-            video_completo = None
-            for v in listar_archivos(VIDEOS, [".mp4"]):
-                if v["nombre"] == ruta_video:
-                    video_completo = v["ruta"]
-                    break
+        video_completo = _buscar_video_para_karaoke(ruta_video)
         if not video_completo:
             return jsonify({"error": "video no encontrado"}), 400
-        comando += ["-ss", "0", "-i", video_completo, "-ss", "0", "-i", ruta_audio]
-        if inicio_audio > 0:
-            comando += ["-ss", str(inicio_audio)]
-        if opcion_sincronizar == 1:
-            comando += ["-map", "0:v:0", "-map", "1:a:0"]
-        elif opcion_sincronizar == 2:
-            comando += ["-ss", str(retardo_sincro), "-map", "0:v:0", "-map", "1:a:0"]
-        else:
-            comando += [
-                "-itsoffset",
-                str(retardo_sincro),
-                "-map",
-                "0:v:0",
-                "-map",
-                "1:a:0",
-            ]
-        comando += [
-            "-c:v",
-            "libx264",
-            "-preset",
-            preset,
-            "-crf",
-            crf,
-            "-c:a",
-            "aac",
-            "-b:a",
-            "192k",
-            "-shortest",
-            salida_final,
-        ]
+        comando = _construir_comando_con_video(
+            video_completo, ruta_audio, datos, salida_final, crf, preset
+        )
     else:
-        comando += ["-ss", "0", "-i", ruta_audio]
-        if inicio_audio > 0:
-            comando += ["-ss", str(inicio_audio)]
-        comando += ["-c:a", "aac", "-b:a", "192k", salida_final]
+        comando = _construir_comando_solo_audio(ruta_audio, datos, salida_final)
+
+    # Crear y ejecutar trabajo
     id_trabajo = str(uuid.uuid4())
     with BLOQUEO_TRABAJOS:
         TRABAJOS[id_trabajo] = {
@@ -327,9 +343,11 @@ def mezclar_karaoke():
             "inicio": time.time(),
             "estado": "ejecutando",
         }
+
     threading.Thread(
         target=ejecutar_subproceso, args=(comando, id_trabajo), daemon=True
     ).start()
+
     return jsonify({"id_trabajo": id_trabajo, "salida": salida_final})
 
 

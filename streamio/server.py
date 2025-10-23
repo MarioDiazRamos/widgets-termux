@@ -118,13 +118,17 @@ def stream():
         return jsonify({"error": "Error interno en el servidor"}), 500
 
 
-def _lanzar_peerflix_idx(magnet, file_idx):
-    import socket
-
+def _obtener_puerto_libre():
+    """Obtiene un puerto disponible del sistema."""
     s = socket.socket()
     s.bind(("", 0))
     port = s.getsockname()[1]
     s.close()
+    return port
+
+
+def _construir_comando_peerflix(magnet, port, file_idx=None):
+    """Construye el comando base para peerflix."""
     cmd = [
         "peerflix",
         magnet,
@@ -135,37 +139,52 @@ def _lanzar_peerflix_idx(magnet, file_idx):
         "--hostname",
         "0.0.0.0",
         "--remove",
-        "--file",
-        str(file_idx),
     ]
+    if file_idx is not None:
+        cmd.extend(["--file", str(file_idx)])
+    return cmd
+
+
+def _detectar_puerto_real(proc, port_fallback, timeout=10):
+    """Detecta el puerto real desde la salida de peerflix."""
+    if not proc.stdout:
+        return port_fallback
+
+    start = time.time()
+    while time.time() - start < timeout:
+        line = proc.stdout.readline()
+        if not line:
+            time.sleep(0.1)
+            continue
+        m = re.search(r"network address.*:(\d+)", line)
+        if m:
+            return int(m.group(1))
+    return port_fallback
+
+
+def _cleanup_temp_files():
+    """Limpia archivos temporales en un hilo separado."""
+    def cleanup():
+        try:
+            for root, dirs, files in os.walk(TEMP_DIR):
+                for f in files:
+                    os.remove(os.path.join(root, f))
+        except Exception as e:
+            logging.error(f"Error limpiando archivos temporales: {e}")
+
+    threading.Thread(target=cleanup, daemon=True).start()
+
+
+def _lanzar_peerflix_idx(magnet, file_idx):
+    port = _obtener_puerto_libre()
+    cmd = _construir_comando_peerflix(magnet, port, file_idx)
+
     try:
         proc = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
         )
-        real_port = None
-        start = time.time()
-        if proc.stdout:
-            while time.time() - start < 10:
-                line = proc.stdout.readline()
-                if not line:
-                    time.sleep(0.1)
-                    continue
-                m = re.search(r"network address.*:(\d+)", line)
-                if m:
-                    real_port = int(m.group(1))
-                    break
-        if not real_port:
-            real_port = port
-
-        def cleanup_temp():
-            try:
-                for root, dirs, files in os.walk(TEMP_DIR):
-                    for f in files:
-                        os.remove(os.path.join(root, f))
-            except Exception as e:
-                logging.error(f"Error limpiando archivos temporales: {e}")
-
-        threading.Thread(target=cleanup_temp, daemon=True).start()
+        real_port = _detectar_puerto_real(proc, port)
+        _cleanup_temp_files()
         return real_port
     except Exception as e:
         logging.error(f"Error en _lanzar_peerflix_idx: {e}")
@@ -173,54 +192,16 @@ def _lanzar_peerflix_idx(magnet, file_idx):
 
 
 def _lanzar_peerflix(magnet):
-    # Lanza peerflix y detecta el puerto real desde la salida
+    """Lanza peerflix y detecta el puerto real desde la salida."""
+    port = _obtener_puerto_libre()
+    cmd = _construir_comando_peerflix(magnet, port)
 
-    s = socket.socket()
-    s.bind(("", 0))
-    port = s.getsockname()[1]
-    s.close()
-    cmd = [
-        "peerflix",
-        magnet,
-        "--port",
-        str(port),
-        "--path",
-        TEMP_DIR,
-        "--hostname",
-        "0.0.0.0",
-        "--remove",  # Elimina archivos temporales al terminar
-    ]
     try:
         proc = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
         )
-        # Leer la salida para detectar el puerto real
-        real_port = None
-        start = time.time()
-        if proc.stdout:
-            while time.time() - start < 10:
-                line = proc.stdout.readline()
-                if not line:
-                    time.sleep(0.1)
-                    continue
-                m = re.search(r"network address.*:(\d+)", line)
-                if m:
-                    real_port = int(m.group(1))
-                    break
-        if not real_port:
-            real_port = port
-
-        # Limpieza automática de archivos temporales después de cada stream
-        def cleanup_temp():
-            try:
-                for root, dirs, files in os.walk(TEMP_DIR):
-                    for f in files:
-                        os.remove(os.path.join(root, f))
-            except Exception as e:
-                logging.error(f"Error limpiando archivos temporales: {e}")
-
-        threading.Thread(target=cleanup_temp, daemon=True).start()
-        # Dejar peerflix corriendo en background
+        real_port = _detectar_puerto_real(proc, port)
+        _cleanup_temp_files()
         return real_port
     except Exception as e:
         logging.error(f"Error en _lanzar_peerflix: {e}")
