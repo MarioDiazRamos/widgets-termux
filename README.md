@@ -21,12 +21,15 @@ Este repositorio contiene scripts y utilidades para automatizar Termux en Androi
   bash ~/Proyectos/widgets-termux/sync.sh
   ```
   Esto dará permisos, creará accesos y wrappers en ~/.shortcuts y ~/bin. No necesitas configurar nada más.
+
 4. (Opcional) Ejecuta:
    ```bash
    termux-reload-settings
    ```
    para que los accesos aparezcan en el menú de Termux.
+
 5. Ejecuta cualquier script desde la terminal, widgets o menú.
+
 6. Si algún script requiere API key, sigue las instrucciones en pantalla la primera vez.
 
 ---
