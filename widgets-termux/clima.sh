@@ -60,10 +60,10 @@ obtener_ciudad() {
     local lat="$1" lon="$2"
     local geo_url="https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=es"
     local geo_data=$(curl -s "$geo_url" --connect-timeout 5)
-        if [ $? -eq 0 ] && [ -n "$geo_data" ]; then
+    if [ $? -eq 0 ] && [ -n "$geo_data" ]; then
         local ciudad=$(echo "$geo_data" | jq -r '.city // .locality // .countryName // "Ubicación actual"' 2>/dev/null)
         [ "$ciudad" != "null" ] && [ -n "$ciudad" ] && { echo "$ciudad"; return; }
-    }
+    fi
     echo "Ubicación actual"
 }
 
