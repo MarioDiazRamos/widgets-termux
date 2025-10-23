@@ -5,25 +5,28 @@ Este repositorio contiene scripts y utilidades para automatizar Termux en Androi
 
 ## Instalación y uso 
 
+
 1. Instala dependencias:
+   ```bash
+   pkg update && pkg install git termux-api python
+   ```
+2. Clona el repositorio completo en la carpeta Proyectos:
   ```bash
-  pkg update && pkg install git termux-api python
-  ```
-2. Clona el repositorio:
-  ```bash
-  git clone https://github.com/MarioDiazRamos/widgets-termux.git ~/Proyectos/widgets-termux
+  mkdir -p ~/Proyectos
+  cd ~/Proyectos
+  git clone https://github.com/MarioDiazRamos/widgets-termux.git
   ```
 3. Sincroniza y configura todo automáticamente:
-  ```bash
-  cd ~/Proyectos/widgets-termux
-  bash sync.sh
-  ```
-  Esto dará permisos, creará accesos y wrappers en ~/.shortcuts y ~/bin. No necesitas configurar nada más.
+   ```bash
+   cd ~/Proyectos/widgets-termux
+   bash sync.sh
+   ```
+   Esto dará permisos, creará accesos y wrappers en ~/.shortcuts y ~/bin. No necesitas configurar nada más.
 4. (Opcional) Ejecuta:
-  ```bash
-  termux-reload-settings
-  ```
-  para que los accesos aparezcan en el menú de Termux.
+   ```bash
+   termux-reload-settings
+   ```
+   para que los accesos aparezcan en el menú de Termux.
 5. Ejecuta cualquier script desde la terminal, widgets o menú.
 6. Si algún script requiere API key, sigue las instrucciones en pantalla la primera vez.
 
