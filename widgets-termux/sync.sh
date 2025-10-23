@@ -1,15 +1,16 @@
 #!/data/data/com.termux/files/usr/bin/bash
-# Sincronizador automático de widgets-termux
+# Sincronizador automático de proyectos (widgets-termux)
 # Clean Code, español, compacto y KISS
 
-REPO_URL="https://github.com/MarioDiazRamos/widgets-termux.git"
-CARPETA_WIDGETS="$HOME/Proyectos/widgets-termux"
+REPO_URL="https://github.com/MarioDiazRamos/Proyectos.git"
+CARPETA_REPO="$HOME/Proyectos"
+CARPETA_WIDGETS="$CARPETA_REPO/widgets-termux"
 
 command -v git >/dev/null || { echo "Git no instalado. Ejecuta: pkg install git"; exit 1; }
-if [ ! -d "$CARPETA_WIDGETS" ]; then
-    git clone "$REPO_URL" "$CARPETA_WIDGETS" || { echo "Error al clonar repo"; exit 1; }
+if [ ! -d "$CARPETA_REPO/.git" ]; then
+    git clone "$REPO_URL" "$CARPETA_REPO" || { echo "Error al clonar repo"; exit 1; }
 else
-    cd "$CARPETA_WIDGETS" && git pull origin main || git pull origin master || { echo "Error al actualizar repo"; exit 1; }
+    cd "$CARPETA_REPO" && git pull origin main || git pull origin master || { echo "Error al actualizar repo"; exit 1; }
 fi
 echo "Sincronización completada."
 

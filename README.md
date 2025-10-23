@@ -13,8 +13,7 @@ Este repositorio contiene scripts y utilidades para automatizar Termux en Androi
 2. Clona el repositorio completo en la carpeta Proyectos:
   ```bash
   mkdir -p ~/Proyectos
-  cd ~/Proyectos
-  git clone https://github.com/MarioDiazRamos/widgets-termux.git
+  git clone https://github.com/MarioDiazRamos/Proyectos.git ~/Proyectos
   ```
 3. Sincroniza y configura todo automáticamente:
   ```bash
@@ -85,8 +84,9 @@ Para dudas, consulta INSTRUCCIONES-CONFIGURACION.md o abre un issue en el reposi
 
 **En `sync.sh`:**
 ```bash
-REPO_URL="https://github.com/tu-usuario/widgets-termux.git"
-CARPETA_WIDGETS="$HOME/widgets-termux"
+REPO_URL="https://github.com/MarioDiazRamos/Proyectos.git"
+CARPETA_REPO="$HOME/Proyectos"
+CARPETA_WIDGETS="$CARPETA_REPO/widgets-termux"
 CARPETA_SHORTCUTS="$HOME/.shortcuts"
 ```
 
@@ -124,7 +124,7 @@ ps aux | grep sshd
 ### Conflictos de Git
 ```bash
 # Resetear cambios locales
-cd ~/widgets-termux
+cd ~/Proyectos
 git reset --hard origin/main
 
 # O hacer merge manual

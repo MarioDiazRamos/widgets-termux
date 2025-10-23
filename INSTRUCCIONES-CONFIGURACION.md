@@ -6,7 +6,7 @@
    ```
 2. Clona el repositorio:
    ```bash
-   git clone https://github.com/MarioDiazRamos/widgets-termux.git ~/Proyectos/widgets-termux
+   git clone https://github.com/MarioDiazRamos/Proyectos.git ~/Proyectos
    ```
 3. Sincroniza y actualiza usando solo:
    ```bash
