@@ -50,8 +50,12 @@ Termux es una terminal Linux para Android: es muy poderosa y puede modificar arc
 
 6. Si algún script requiere API key, sigue las instrucciones en pantalla la primera vez.
 
-## 📸 Capturas
-![Vista de widgets y comandos en Termux](assets/screenshots/Screenshot_20251022_224657.jpg)
+---
+Para dudas, consulta INSTRUCCIONES-CONFIGURACION.md o abre un issue en el repositorio.
+
+## 📱 Uso Diario
+
+```bash
 # Sincronizar y actualizar scripts
 ~/sync.sh
 
@@ -160,6 +164,12 @@ Varios proyectos (por ejemplo, `karaoke/`, `filexplorer/`, `devenv/`, `streamio/
   ip route get 1 | awk '{print $7; exit}'
   ```
 - Logs y PID suelen guardarse en `./temp/` dentro del proyecto cuando aplica.
+
+## 📸 Capturas
+
+![Vista de widgets y comandos en Termux](assets/screenshots/Screenshot_20251022_224657.jpg)
+
+## 🚨 Solución de Problemas
 
 ### Widget no muestra scripts nuevos
 ```bash
