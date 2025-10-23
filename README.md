@@ -32,33 +32,8 @@ Este repositorio contiene scripts y utilidades para automatizar Termux en Androi
 ---
 Para dudas, consulta INSTRUCCIONES-CONFIGURACION.md o abre un issue en el repositorio.
 
-### 2. Configuración en PC (Windows)
-
-```powershell
-# Configuración inicial del repositorio local
-.\sincronizar-pc.ps1 configurar
-
-# Configurar repositorio remoto
-cd widgets-termux
-git remote add origin https://github.com/tu-usuario/widgets-termux.git
-```
-
-### 3. Configurar SSH en Termux (opcional para PC)
-
-```bash
-# Instalar OpenSSH
-pkg install openssh
-
-# Iniciar servidor SSH
-sshd
-
-# Ver IP del dispositivo
-ifconfig 2>/dev/null | awk '/inet / && $2 != "127.0.0.1" {print $2}'
-```
 
 ## 📱 Uso Diario
-
-### Desde Termux
 
 ```bash
 # Sincronizar y actualizar scripts
@@ -74,53 +49,6 @@ ifconfig 2>/dev/null | awk '/inet / && $2 != "127.0.0.1" {print $2}'
 ~/apariencia.sh
 ~/slow.sh
 # ...y otros según el menú y accesos directos
-```
-
-### Desde PC
-
-```powershell
-# Ver estado del repositorio local
-.\sincronizar-pc.ps1 estado
-
-# Enviar cambios a Termux (requiere SSH configurado)
-.\sincronizar-pc.ps1 desplegar 192.168.1.100 tu-usuario
-
-# Usar rsync para sincronización más eficiente
-.\rsync-termux.ps1 enviar 192.168.1.100 tu-usuario
-
-# Modo vigilancia (sincronización automática)
-.\rsync-termux.ps1 vigilar 192.168.1.100 tu-usuario
-```
-
-## 🔄 Flujos de Trabajo
-
-### Agregar un nuevo script
-
-**Opción A: Desde PC**
-1. Crear/editar script en `widgets-termux/`
-2. `git add . && git commit -m "Nuevo script"`
-3. `git push origin main`
-4. En Termux: `~/sincronizar-widgets.sh`
-
-**Opción B: Desarrollo directo en Termux**
-1. Editar en `~/widgets-termux/`
-2. `git add . && git commit -m "Cambios"`
-3. `git push origin main`
-4. `~/sincronizar-widgets.sh`
-
-### Restaurar en dispositivo nuevo
-
-```bash
-# Instalar dependencias
-pkg update && pkg install git termux-api
-
-# Descargar script de sincronización
-curl -O https://raw.githubusercontent.com/tu-usuario/widgets-termux/main/sincronizar-widgets.sh
-chmod +x sincronizar-widgets.sh
-
-# Editar URL del repo y ejecutar
-nano sincronizar-widgets.sh
-./sincronizar-widgets.sh
 ```
 
 ## 🛠️ Scripts Incluidos
