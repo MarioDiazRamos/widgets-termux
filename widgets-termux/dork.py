@@ -6,8 +6,6 @@
 
 import argparse
 import json
-import os
-import shlex
 import subprocess
 import sys
 import urllib.parse
@@ -51,7 +49,9 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description="Generador local de Google Dorks")
     parser.add_argument("keyword", nargs="?", help="Palabra clave o frase")
     parser.add_argument("--json", action="store_true", help="Imprime solo JSON")
-    parser.add_argument("--open", type=int, default=0, help="Abrir en navegador el dork N (1..N)")
+    parser.add_argument(
+        "--open", type=int, default=0, help="Abrir en navegador el dork N (1..N)"
+    )
     args = parser.parse_args(argv)
 
     keyword = args.keyword
@@ -70,7 +70,9 @@ def main(argv: list[str]) -> int:
         print(f"\nDorks generados para: {keyword}\n")
         for i, d in enumerate(dorks, 1):
             print(f"{i:2d}) {d}")
-        print("\nSugerencia: usa --json para obtenerlos en JSON o --open N para abrir uno.")
+        print(
+            "\nSugerencia: usa --json para obtenerlos en JSON o --open N para abrir uno."
+        )
 
     if args.open:
         idx = args.open - 1

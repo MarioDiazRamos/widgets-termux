@@ -1,5 +1,4 @@
 import os
-import json
 import shlex
 import uuid
 import time
@@ -27,6 +26,7 @@ DIR_TEMP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "temp")
 os.makedirs(DIR_TEMP, exist_ok=True)
 DIR_LOGS = DIR_TEMP  # Para compatibilidad con el resto del código
 
+
 # Utilidades
 def listar_archivos(directorio, extensiones):
     resultado = []
@@ -38,6 +38,7 @@ def listar_archivos(directorio, extensiones):
             resultado.append({"nombre": f.name, "ruta": str(f)})
     return resultado
 
+
 def ruta_valida(ruta, permitidos):
     abspath = os.path.abspath(ruta)
     for d in permitidos:
@@ -45,6 +46,7 @@ def ruta_valida(ruta, permitidos):
             if os.path.exists(abspath):
                 return abspath
     return None
+
 
 def ejecutar_subproceso(comando, id_trabajo):
     log = os.path.join(DIR_LOGS, f"{id_trabajo}.log")
@@ -56,18 +58,22 @@ def ejecutar_subproceso(comando, id_trabajo):
     with BLOQUEO_TRABAJOS:
         TRABAJOS[id_trabajo]["estado"] = "finalizado"
 
+
 # Rutas API
 @app.route("/")
 def inicio():
     return send_from_directory("static", "index.html")
 
+
 @app.route("/api/listar_audios", methods=["GET"])
 def listar_audios():
-    return jsonify(listar_archivos(DESCARGAS, ['.m4a', '.flac']))
+    return jsonify(listar_archivos(DESCARGAS, [".m4a", ".flac"]))
+
 
 @app.route("/api/listar_videos", methods=["GET"])
 def listar_videos():
-    return jsonify(listar_archivos(VIDEOS, ['.mp4']))
+    return jsonify(listar_archivos(VIDEOS, [".mp4"]))
+
 
 @app.route("/api/estado/<id_trabajo>", methods=["GET"])
 def estado_trabajo(id_trabajo):
@@ -76,13 +82,20 @@ def estado_trabajo(id_trabajo):
         if not trabajo:
             return jsonify({"error": "no encontrado"}), 404
         proc = trabajo.get("proceso")
-        estado = "ejecutando" if proc and proc.poll() is None else trabajo.get("estado", "finalizado")
-        return jsonify({
-            "id_trabajo": id_trabajo,
-            "estado": estado,
-            "comando": trabajo.get("comando"),
-            "salida": trabajo.get("ruta_salida")
-        })
+        estado = (
+            "ejecutando"
+            if proc and proc.poll() is None
+            else trabajo.get("estado", "finalizado")
+        )
+        return jsonify(
+            {
+                "id_trabajo": id_trabajo,
+                "estado": estado,
+                "comando": trabajo.get("comando"),
+                "salida": trabajo.get("ruta_salida"),
+            }
+        )
+
 
 @app.route("/api/log_trabajo/<id_trabajo>", methods=["GET"])
 def log_trabajo(id_trabajo):
@@ -91,6 +104,7 @@ def log_trabajo(id_trabajo):
         return send_from_directory(DIR_LOGS, f"{id_trabajo}.log")
     else:
         return jsonify({"error": "log no encontrado"}), 404
+
 
 # Transponer audio sobre video
 @app.route("/api/transponer", methods=["POST"])
@@ -106,14 +120,14 @@ def transponer_audio():
     if isinstance(video, str) and video.startswith("/"):
         ruta_video = ruta_valida(video, [VIDEOS])
     else:
-        for v in listar_archivos(VIDEOS, ['.mp4']):
+        for v in listar_archivos(VIDEOS, [".mp4"]):
             if v["nombre"] == video:
                 ruta_video = v["ruta"]
                 break
     if isinstance(audio, str) and audio.startswith("/"):
         ruta_audio = ruta_valida(audio, [DESCARGAS])
     else:
-        for a in listar_archivos(DESCARGAS, ['.m4a', '.flac']):
+        for a in listar_archivos(DESCARGAS, [".m4a", ".flac"]):
             if a["nombre"] == audio:
                 ruta_audio = a["ruta"]
                 break
@@ -125,14 +139,17 @@ def transponer_audio():
         if "-" not in raw:
             continue
         inicio_raw, fin_raw = raw.split("-", 1)
+
         def a_segundos(x):
             x = x.strip()
             if ":" in x:
                 partes = x.split(":")
                 if len(partes) == 2:
-                    m = float(partes[0]); s = float(partes[1])
-                    return m*60.0 + s
+                    m = float(partes[0])
+                    s = float(partes[1])
+                    return m * 60.0 + s
             return float(x)
+
         try:
             ssec = a_segundos(inicio_raw)
             esec = a_segundos(fin_raw)
@@ -144,12 +161,17 @@ def transponer_audio():
         return jsonify({"error": "intervalos no válidos"}), 400
     filtros = []
     cuenta = 0
-    for (ssec, esec) in segmentos:
+    for ssec, esec in segmentos:
         inicio_ms = int(round(ssec * 1000.0))
-        filtros.append(f"[1:a]atrim=start={ssec}:end={esec},asetpts=PTS-STARTPTS,volume={ganancia},adelay={inicio_ms}|{inicio_ms}[s{cuenta}]")
+        filtros.append(
+            f"[1:a]atrim=start={ssec}:end={esec},asetpts=PTS-STARTPTS,"
+            f"volume={ganancia},adelay={inicio_ms}|{inicio_ms}[s{cuenta}]"
+        )
         cuenta += 1
     entradas_mix = "[0:a]" + "".join(f"[s{i}]" for i in range(cuenta))
-    filtros.append(f"{entradas_mix}amix=inputs={cuenta+1}:duration=first:dropout_transition=0[aout]")
+    filtros.append(
+        f"{entradas_mix}amix=inputs={cuenta+1}:duration=first:dropout_transition=0[aout]"
+    )
     filtro_complejo = ";".join(filtros)
     base = os.path.splitext(os.path.basename(ruta_audio))[0]
     salida = os.path.join(DESTINO, f"{base}_transpuesto_{int(time.time())}.mp4")
@@ -160,24 +182,49 @@ def transponer_audio():
     crf = crf_map.get(calidad, "23")
     preset = preset_map.get(velocidad, "medium")
     comando = [
-        "ffmpeg", "-y",
-        "-ss", "0", "-i", ruta_video,
-        "-ss", "0", "-i", ruta_audio,
-        "-filter_complex", filtro_complejo,
-        "-map", "0:v",
-        "-map", "[aout]",
-        "-c:v", "libx264",
-        "-preset", preset,
-        "-crf", crf,
-        "-c:a", "aac",
-        "-b:a", "192k",
-        "-shortest", salida
+        "ffmpeg",
+        "-y",
+        "-ss",
+        "0",
+        "-i",
+        ruta_video,
+        "-ss",
+        "0",
+        "-i",
+        ruta_audio,
+        "-filter_complex",
+        filtro_complejo,
+        "-map",
+        "0:v",
+        "-map",
+        "[aout]",
+        "-c:v",
+        "libx264",
+        "-preset",
+        preset,
+        "-crf",
+        crf,
+        "-c:a",
+        "aac",
+        "-b:a",
+        "192k",
+        "-shortest",
+        salida,
     ]
     id_trabajo = str(uuid.uuid4())
     with BLOQUEO_TRABAJOS:
-        TRABAJOS[id_trabajo] = {"proceso": None, "ruta_salida": salida, "comando": " ".join(shlex.quote(c) for c in comando), "inicio": time.time(), "estado": "ejecutando"}
-    threading.Thread(target=ejecutar_subproceso, args=(comando, id_trabajo), daemon=True).start()
+        TRABAJOS[id_trabajo] = {
+            "proceso": None,
+            "ruta_salida": salida,
+            "comando": " ".join(shlex.quote(c) for c in comando),
+            "inicio": time.time(),
+            "estado": "ejecutando",
+        }
+    threading.Thread(
+        target=ejecutar_subproceso, args=(comando, id_trabajo), daemon=True
+    ).start()
     return jsonify({"id_trabajo": id_trabajo, "salida": salida})
+
 
 # Mezclar audio y video (karaoke)
 @app.route("/api/karaoke", methods=["POST"])
@@ -193,13 +240,16 @@ def mezclar_karaoke():
     if isinstance(audio, str) and audio.startswith("/"):
         ruta_audio = ruta_valida(audio, [DESCARGAS])
     else:
-        for a in listar_archivos(DESCARGAS, ['.m4a', '.flac']):
+        for a in listar_archivos(DESCARGAS, [".m4a", ".flac"]):
             if a["nombre"] == audio:
                 ruta_audio = a["ruta"]
                 break
     if not ruta_audio:
         return jsonify({"error": "audio no encontrado"}), 400
-    salida_final = os.path.join(DESTINO, f"{os.path.splitext(os.path.basename(ruta_audio))[0]}_final_{int(time.time())}.mp4")
+    salida_final = os.path.join(
+        DESTINO,
+        f"{os.path.splitext(os.path.basename(ruta_audio))[0]}_final_{int(time.time())}.mp4",
+    )
     calidad = datos.get("output_quality", "media")
     velocidad = datos.get("output_speed", "equilibrada")
     crf_map = {"alta": "18", "media": "23", "baja": "28"}
@@ -212,7 +262,7 @@ def mezclar_karaoke():
             video_completo = ruta_valida(ruta_video, [VIDEOS])
         else:
             video_completo = None
-            for v in listar_archivos(VIDEOS, ['.mp4']):
+            for v in listar_archivos(VIDEOS, [".mp4"]):
                 if v["nombre"] == ruta_video:
                     video_completo = v["ruta"]
                     break
@@ -226,8 +276,28 @@ def mezclar_karaoke():
         elif opcion_sincronizar == 2:
             comando += ["-ss", str(retardo_sincro), "-map", "0:v:0", "-map", "1:a:0"]
         else:
-            comando += ["-itsoffset", str(retardo_sincro), "-map", "0:v:0", "-map", "1:a:0"]
-        comando += ["-c:v", "libx264", "-preset", preset, "-crf", crf, "-c:a", "aac", "-b:a", "192k", "-shortest", salida_final]
+            comando += [
+                "-itsoffset",
+                str(retardo_sincro),
+                "-map",
+                "0:v:0",
+                "-map",
+                "1:a:0",
+            ]
+        comando += [
+            "-c:v",
+            "libx264",
+            "-preset",
+            preset,
+            "-crf",
+            crf,
+            "-c:a",
+            "aac",
+            "-b:a",
+            "192k",
+            "-shortest",
+            salida_final,
+        ]
     else:
         comando += ["-ss", "0", "-i", ruta_audio]
         if inicio_audio > 0:
@@ -235,8 +305,16 @@ def mezclar_karaoke():
         comando += ["-c:a", "aac", "-b:a", "192k", salida_final]
     id_trabajo = str(uuid.uuid4())
     with BLOQUEO_TRABAJOS:
-        TRABAJOS[id_trabajo] = {"proceso": None, "ruta_salida": salida_final, "comando": " ".join(shlex.quote(x) for x in comando), "inicio": time.time(), "estado": "ejecutando"}
-    threading.Thread(target=ejecutar_subproceso, args=(comando, id_trabajo), daemon=True).start()
+        TRABAJOS[id_trabajo] = {
+            "proceso": None,
+            "ruta_salida": salida_final,
+            "comando": " ".join(shlex.quote(x) for x in comando),
+            "inicio": time.time(),
+            "estado": "ejecutando",
+        }
+    threading.Thread(
+        target=ejecutar_subproceso, args=(comando, id_trabajo), daemon=True
+    ).start()
     return jsonify({"id_trabajo": id_trabajo, "salida": salida_final})
 
 

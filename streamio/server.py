@@ -1,9 +1,12 @@
 # Servidor principal Streamio (alternativa a Stremio+Torrentio)
 # Clean code, español, Flask, integración bash, torrent y scrapers
 import os
+import re
+import socket
 import subprocess
-from flask import Flask, request, jsonify, send_from_directory
+import time
 import logging
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from scrapers import yts, tpb, x1337
 
@@ -15,6 +18,7 @@ TEMP_DIR = os.path.join(os.path.dirname(__file__), "temp")
 os.makedirs(TEMP_DIR, exist_ok=True)
 logging.basicConfig(filename=os.path.join(TEMP_DIR, "error.log"), level=logging.ERROR)
 logging.basicConfig(filename=os.path.join(TEMP_DIR, "error.log"), level=logging.ERROR)
+
 
 # --- API de búsqueda ---
 @app.route("/search")
@@ -29,17 +33,17 @@ def search():
     resultados += x1337.buscar(q)
     # Normalizar fuente
     for r in resultados:
-        if 'fuente' not in r:
-            r['fuente'] = 'YTS'
-        if 'tipo' not in r:
-            r['tipo'] = 'pelicula'
-        if 'year' not in r:
-            r['year'] = ''
+        if "fuente" not in r:
+            r["fuente"] = "YTS"
+        if "tipo" not in r:
+            r["tipo"] = "pelicula"
+        if "year" not in r:
+            r["year"] = ""
     # Agrupar por fuente y tipo
     agrupados = {}
     for r in resultados:
-        fuente = r['fuente']
-        tipo = r['tipo']
+        fuente = r["fuente"]
+        tipo = r["tipo"]
         if fuente not in agrupados:
             agrupados[fuente] = {}
         if tipo not in agrupados[fuente]:
@@ -48,8 +52,11 @@ def search():
     # Ordenar cada grupo por seeds y año
     for fuente in agrupados:
         for tipo in agrupados[fuente]:
-            agrupados[fuente][tipo].sort(key=lambda x: (int(x.get('seeds',0)), x.get('year','')), reverse=True)
+            agrupados[fuente][tipo].sort(
+                key=lambda x: (int(x.get("seeds", 0)), x.get("year", "")), reverse=True
+            )
     return jsonify(agrupados)
+
 
 # --- API de streaming ---
 @app.route("/stream")
@@ -82,6 +89,7 @@ def stream():
             return jsonify({"error": "No se pudo iniciar stream"}), 500
         # Obtener IP local (no localhost)
         import socket
+
         ip_local = None
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -92,31 +100,48 @@ def stream():
             ip_local = "127.0.0.1"
         url = f"http://{ip_local}:{port}"
         compatible = ext in [".mp4", ".webm"]
-        return jsonify({
-            "url": url,
-            "compatible": compatible,
-            "ext": ext,
-            "msg": "Formato compatible para navegador" if compatible else "Este formato puede no reproducirse en el navegador. Usa VLC si hay problemas."
-        })
+        return jsonify(
+            {
+                "url": url,
+                "compatible": compatible,
+                "ext": ext,
+                "msg": (
+                    "Formato compatible para navegador"
+                    if compatible
+                    else "Este formato puede no reproducirse en el navegador. "
+                         "Usa VLC si hay problemas."
+                ),
+            }
+        )
     except Exception as e:
         logging.error(f"Error en /stream: {e}")
         return jsonify({"error": "Error interno en el servidor"}), 500
+
+
 def _lanzar_peerflix_idx(magnet, file_idx):
     import socket
+
     s = socket.socket()
     s.bind(("", 0))
     port = s.getsockname()[1]
     s.close()
     cmd = [
-        "peerflix", magnet,
-        "--port", str(port),
-        "--path", TEMP_DIR,
-        "--hostname", "0.0.0.0",
+        "peerflix",
+        magnet,
+        "--port",
+        str(port),
+        "--path",
+        TEMP_DIR,
+        "--hostname",
+        "0.0.0.0",
         "--remove",
-        "--file", str(file_idx)
+        "--file",
+        str(file_idx),
     ]
     try:
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        proc = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+        )
         real_port = None
         start = time.time()
         if proc.stdout:
@@ -125,12 +150,13 @@ def _lanzar_peerflix_idx(magnet, file_idx):
                 if not line:
                     time.sleep(0.1)
                     continue
-                m = re.search(r'network address.*:(\d+)', line)
+                m = re.search(r"network address.*:(\d+)", line)
                 if m:
                     real_port = int(m.group(1))
                     break
         if not real_port:
             real_port = port
+
         def cleanup_temp():
             try:
                 for root, dirs, files in os.walk(TEMP_DIR):
@@ -138,31 +164,38 @@ def _lanzar_peerflix_idx(magnet, file_idx):
                         os.remove(os.path.join(root, f))
             except Exception as e:
                 logging.error(f"Error limpiando archivos temporales: {e}")
+
         import threading
+
         threading.Thread(target=cleanup_temp, daemon=True).start()
         return real_port
     except Exception as e:
         logging.error(f"Error en _lanzar_peerflix_idx: {e}")
         return None
 
-import re
-import time
+
 def _lanzar_peerflix(magnet):
     # Lanza peerflix y detecta el puerto real desde la salida
-    import socket
+
     s = socket.socket()
     s.bind(("", 0))
     port = s.getsockname()[1]
     s.close()
     cmd = [
-        "peerflix", magnet,
-        "--port", str(port),
-        "--path", TEMP_DIR,
-        "--hostname", "0.0.0.0",
-        "--remove" # Elimina archivos temporales al terminar
+        "peerflix",
+        magnet,
+        "--port",
+        str(port),
+        "--path",
+        TEMP_DIR,
+        "--hostname",
+        "0.0.0.0",
+        "--remove",  # Elimina archivos temporales al terminar
     ]
     try:
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        proc = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+        )
         # Leer la salida para detectar el puerto real
         real_port = None
         start = time.time()
@@ -172,12 +205,13 @@ def _lanzar_peerflix(magnet):
                 if not line:
                     time.sleep(0.1)
                     continue
-                m = re.search(r'network address.*:(\d+)', line)
+                m = re.search(r"network address.*:(\d+)", line)
                 if m:
                     real_port = int(m.group(1))
                     break
         if not real_port:
             real_port = port
+
         # Limpieza automática de archivos temporales después de cada stream
         def cleanup_temp():
             try:
@@ -186,7 +220,9 @@ def _lanzar_peerflix(magnet):
                         os.remove(os.path.join(root, f))
             except Exception as e:
                 logging.error(f"Error limpiando archivos temporales: {e}")
+
         import threading
+
         threading.Thread(target=cleanup_temp, daemon=True).start()
         # Dejar peerflix corriendo en background
         return real_port
@@ -200,13 +236,16 @@ def _lanzar_peerflix(magnet):
 def index():
     return send_from_directory("static", "index.html")
 
+
 @app.route("/app.js")
 def app_js():
     return send_from_directory("static", "app.js")
 
+
 @app.route("/style.css")
 def style_css():
     return send_from_directory("static", "style.css")
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
