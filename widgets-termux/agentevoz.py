@@ -180,28 +180,51 @@ def pedir_comando(prompt):
     return cmd, None
 
 
-def ejecutar_comando(cmd):
+def _verificar_comandos_peligrosos(cmd):
+    """Verifica si el comando contiene elementos peligrosos."""
     peligrosos = ["rm -rf", "mkfs", ":(){:|:&};:", "dd if=", ">:", "format", "delete"]
-    if any(p in cmd.lower() for p in peligrosos):
+    return any(p in cmd.lower() for p in peligrosos)
+
+
+def _determinar_timeout_comando(cmd):
+    """Determina el timeout apropiado basado en el tipo de comando."""
+    return 30 if cmd.startswith(("termux-", "am start", "pm ")) else 20
+
+
+def _formatear_resultado_comando(result):
+    """Formatea el resultado del comando ejecutado."""
+    salida = result.stdout.strip()
+    error = result.stderr.strip()
+
+    if result.returncode == 0:
+        if salida == "" and error == "":
+            return "Comando ejecutado correctamente."
+        return (salida if salida else "") + ("\n" + error if error else "")
+
+    error_msg = error if error else "Sin mensaje de error"
+    return f"Error (código {result.returncode}): {error_msg}"
+
+
+def ejecutar_comando(cmd):
+    """
+    Ejecuta un comando del sistema de forma segura.
+
+    Args:
+        cmd: Comando a ejecutar
+
+    Returns:
+        str: Resultado de la ejecución o mensaje de error
+    """
+    if _verificar_comandos_peligrosos(cmd):
         return "Comando bloqueado por seguridad."
+
     try:
-        # Usar siempre shlex.split() para evitar inyección de comandos
-        if cmd.startswith(("termux-", "am start", "pm ")):
-            result = subprocess.run(
-                shlex.split(cmd), capture_output=True, text=True, timeout=30
-            )
-        else:
-            result = subprocess.run(
-                shlex.split(cmd), capture_output=True, text=True, timeout=20
-            )
-        salida = result.stdout.strip()
-        error = result.stderr.strip()
-        if result.returncode == 0:
-            if salida == "" and error == "":
-                return "Comando ejecutado correctamente."
-            return (salida if salida else "") + ("\n" + error if error else "")
-        error_msg = error if error else "Sin mensaje de error"
-        return f"Error (código {result.returncode}): {error_msg}"
+        timeout = _determinar_timeout_comando(cmd)
+        result = subprocess.run(
+            shlex.split(cmd), capture_output=True, text=True, timeout=timeout
+        )
+        return _formatear_resultado_comando(result)
+
     except subprocess.TimeoutExpired:
         return "El comando tardó demasiado y fue interrumpido."
     except Exception as e:
