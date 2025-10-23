@@ -155,12 +155,11 @@ def jobs_start():
             "echo Trabajo listo; date'"
         )
     if isinstance(cmd, list):
-        shell = False
         popen_cmd = cmd
         cmd_str = " ".join(shlex.quote(c) for c in cmd)
     else:
-        shell = True
-        popen_cmd = cmd
+        # Convertir string a lista para evitar shell=True
+        popen_cmd = shlex.split(cmd)
         cmd_str = cmd
 
     job_id = uuid.uuid4().hex[:12]
@@ -182,11 +181,11 @@ def jobs_start():
     with open(paths["log"], "a", encoding="utf-8") as logf:
         proc = subprocess.Popen(
             popen_cmd,
-            shell=shell,
+            shell=False,
             stdout=logf,
             stderr=logf,
             cwd=str(HOME),
-            preexec_fn=os.setsid,
+            # preexec_fn solo funciona en Unix, omitir en Windows
         )
     with open(paths["pid"], "w", encoding="utf-8") as pf:
         pf.write(str(proc.pid))

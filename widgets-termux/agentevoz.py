@@ -1,24 +1,44 @@
-import os
-import requests
+"""
+Agente de voz para Termux con integración de Gemini y TTS/STT.
+
+Este módulo proporciona un agente conversacional de voz que permite:
+- Conversión de texto a voz (TTS) usando termux-tts-speak
+- Conversión de voz a texto (STT) usando termux-speech-to-text
+- Procesamiento inteligente con API de Gemini
+- Ejecución segura de comandos del sistema
+- Interfaz de comandos por voz
+
+Requiere permisos de micrófono y Termux:API instalado.
+"""
+
 import json
-import subprocess
+import os
 import shlex
+import subprocess
 import sys
 import time
+
+import requests
 
 # === CONFIGURACIÓN ===
 CONFIG_PATH = os.path.expanduser("~/.agentevoz_config.json")
 
 
 def pedir_api_key():
+    """
+    Solicita al usuario su API key de Google Gemini de forma interactiva.
+
+    Returns:
+        str: La API key proporcionada por el usuario.
+    """
     print("\nPara usar el agente de voz necesitas tu propia API key de Gemini.")
     print("1. Ve a https://aistudio.google.com/app/apikey")
     print("2. Genera tu clave y pégala aquí.")
     api = input("Pega tu API key: ").strip()
     if not api:
         print("No se ingresó clave. Saliendo.")
-        exit(1)
-    with open(CONFIG_PATH, "w") as f:
+        sys.exit(1)
+    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         json.dump({"API_KEY": api}, f)
     return api
 
@@ -26,10 +46,11 @@ def pedir_api_key():
 def cargar_api_key():
     if os.path.exists(CONFIG_PATH):
         try:
-            with open(CONFIG_PATH) as f:
+            with open(CONFIG_PATH, encoding="utf-8") as f:
                 return json.load(f)["API_KEY"]
-        except Exception:
-            pass
+        except (KeyError, json.JSONDecodeError, IOError):
+            # Si el archivo está corrupto o no tiene la clave, lo regeneramos
+            print("Archivo de configuración inválido, solicitando nueva API key...")
     return pedir_api_key()
 
 
@@ -164,9 +185,10 @@ def ejecutar_comando(cmd):
     if any(p in cmd.lower() for p in peligrosos):
         return "Comando bloqueado por seguridad."
     try:
+        # Usar siempre shlex.split() para evitar inyección de comandos
         if cmd.startswith(("termux-", "am start", "pm ")):
             result = subprocess.run(
-                cmd, shell=True, capture_output=True, text=True, timeout=30
+                shlex.split(cmd), capture_output=True, text=True, timeout=30
             )
         else:
             result = subprocess.run(
@@ -220,7 +242,9 @@ def _obtener_confirmacion_usuario():
     confirmacion = escuchar_voz()
 
     palabras_confirmacion = ["sí", "si", "ok", "dale", "hazlo", "ejecuta"]
-    if confirmacion and any(palabra in confirmacion.lower() for palabra in palabras_confirmacion):
+    if confirmacion and any(
+        palabra in confirmacion.lower() for palabra in palabras_confirmacion
+    ):
         print(f"{VERDE}Confirmado por voz{SIN_COLOR}")
         return True
     else:

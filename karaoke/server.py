@@ -18,7 +18,7 @@ PUERTO = 8080
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 CORS(app)
 
-TRABAJOS = {}
+TRABAJOS: dict[str, dict] = {}
 BLOQUEO_TRABAJOS = threading.Lock()
 
 # Carpeta interna para logs y temporales
@@ -190,11 +190,34 @@ def _construir_comando_ffmpeg(ruta_video, ruta_audio, filtro_complejo, salida, d
     preset = preset_map.get(velocidad, "medium")
 
     return [
-        "ffmpeg", "-y", "-ss", "0", "-i", ruta_video,
-        "-ss", "0", "-i", ruta_audio, "-filter_complex", filtro_complejo,
-        "-map", "0:v", "-map", "[aout]", "-c:v", "libx264",
-        "-preset", preset, "-crf", crf, "-c:a", "aac",
-        "-b:a", "192k", "-shortest", salida,
+        "ffmpeg",
+        "-y",
+        "-ss",
+        "0",
+        "-i",
+        ruta_video,
+        "-ss",
+        "0",
+        "-i",
+        ruta_audio,
+        "-filter_complex",
+        filtro_complejo,
+        "-map",
+        "0:v",
+        "-map",
+        "[aout]",
+        "-c:v",
+        "libx264",
+        "-preset",
+        preset,
+        "-crf",
+        crf,
+        "-c:a",
+        "aac",
+        "-b:a",
+        "192k",
+        "-shortest",
+        salida,
     ]
 
 
@@ -221,7 +244,9 @@ def transponer_audio():
     filtro_complejo = _generar_filtros_audio(segmentos, ganancia)
     base = os.path.splitext(os.path.basename(ruta_audio))[0]
     salida = os.path.join(DESTINO, f"{base}_transpuesto_{int(time.time())}.mp4")
-    comando = _construir_comando_ffmpeg(ruta_video, ruta_audio, filtro_complejo, salida, datos)
+    comando = _construir_comando_ffmpeg(
+        ruta_video, ruta_audio, filtro_complejo, salida, datos
+    )
 
     # Crear trabajo
     id_trabajo = str(uuid.uuid4())
@@ -266,13 +291,26 @@ def _buscar_video_para_karaoke(ruta_video):
     return None
 
 
-def _construir_comando_con_video(video_completo, ruta_audio, datos, salida_final, crf, preset):
+def _construir_comando_con_video(
+    video_completo, ruta_audio, datos, salida_final, crf, preset
+):
     """Construye el comando FFmpeg para mezclar video y audio."""
     opcion_sincronizar = int(datos.get("sync_option", 1))
     retardo_sincro = float(datos.get("sync_delay", 0))
     inicio_audio = float(datos.get("audio_start_sec", 0))
 
-    comando = ["ffmpeg", "-y", "-ss", "0", "-i", video_completo, "-ss", "0", "-i", ruta_audio]
+    comando = [
+        "ffmpeg",
+        "-y",
+        "-ss",
+        "0",
+        "-i",
+        video_completo,
+        "-ss",
+        "0",
+        "-i",
+        ruta_audio,
+    ]
 
     if inicio_audio > 0:
         comando += ["-ss", str(inicio_audio)]
@@ -287,8 +325,18 @@ def _construir_comando_con_video(video_completo, ruta_audio, datos, salida_final
 
     # Añadir opciones de codificación
     comando += [
-        "-c:v", "libx264", "-preset", preset, "-crf", crf,
-        "-c:a", "aac", "-b:a", "192k", "-shortest", salida_final,
+        "-c:v",
+        "libx264",
+        "-preset",
+        preset,
+        "-crf",
+        crf,
+        "-c:a",
+        "aac",
+        "-b:a",
+        "192k",
+        "-shortest",
+        salida_final,
     ]
     return comando
 
