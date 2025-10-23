@@ -50,13 +50,7 @@ Termux es una terminal Linux para Android: es muy poderosa y puede modificar arc
 
 6. Si algún script requiere API key, sigue las instrucciones en pantalla la primera vez.
 
----
-Para dudas, consulta INSTRUCCIONES-CONFIGURACION.md o abre un issue en el repositorio.
-
-
-## 📱 Uso Diario
-
-```bash
+![Vista de widgets y comandos en Termux](assets/screenshots/Screenshot_20251022_224657.jpg)
 # Sincronizar y actualizar scripts
 ~/sync.sh
 
