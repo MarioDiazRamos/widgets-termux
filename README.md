@@ -19,6 +19,7 @@ Termux es una terminal Linux para Android: es muy poderosa y puede modificar arc
 - [¿Qué es un wrapper?](#-qué-es-un-wrapper)
 - [Personalización](#-personalización)
 - [Servidores locales](#-servidores-locales-cómo-funcionan)
+- [Capturas](#-capturas)
 - [Solución de Problemas](#-solución-de-problemas)
 
 
@@ -164,6 +165,16 @@ Varios proyectos (por ejemplo, `karaoke/`, `filexplorer/`, `devenv/`, `streamio/
   ip route get 1 | awk '{print $7; exit}'
   ```
 - Logs y PID suelen guardarse en `./temp/` dentro del proyecto cuando aplica.
+
+## 📸 Capturas
+
+<!--
+Para no guardar imágenes en el repo, sube la captura a un Issue de GitHub (arrastrando el JPG al
+editor del issue). Copia la URL "https://user-images.githubusercontent.com/...jpg" y reemplaza la URL
+de abajo. Así el README mostrará la imagen sin agregar binarios al repositorio.
+-->
+
+![Vista de widgets y comandos en Termux](https://user-images.githubusercontent.com/REEMPLAZAR_POR_URL_DE_LA_CAPTURA.jpg)
 
 ### Widget no muestra scripts nuevos
 ```bash
