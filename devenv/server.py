@@ -6,8 +6,7 @@ import shlex
 import signal
 import subprocess
 from pathlib import Path
-from flask import Flask, jsonify, request, send_from_directory, abort
-
+from flask import Flask, jsonify, request, send_from_directory
 APP_DIR = Path(__file__).resolve().parent
 HOME = Path(os.path.expanduser("~")).resolve()
 JOBS_DIR = APP_DIR / "jobs_tmp"
