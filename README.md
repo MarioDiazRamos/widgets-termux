@@ -62,6 +62,26 @@ slow
 # ...y otros según el menú y accesos directos
 ```
 
+## 🧩 Proyectos del monorepo (qué hace cada uno)
+
+- `widgets-termux/` – Colección de utilidades y launchers para Termux Widgets.
+  - `sync` – Sincroniza el repo y crea accesos (wrappers). Uso diario.
+  - `proyectos` – Lista rápida de todos los comandos disponibles.
+  - `descarga` – Descarga audio de YouTube; opcionalmente convierte a FLAC; agrega metadatos y miniatura.
+  - `slow` – Cambia la velocidad de un video generando un nuevo archivo.
+  - `clima` – Muestra clima actual con GPS y notificación (usa open‑meteo y termux‑api).
+  - `agente` – Agente de IA (Gemini) que sugiere y ejecuta comandos simples de Termux.
+  - `agentevoz` – Igual que agente, pero por voz (TTS/STT con termux‑api).
+  - `apariencia` – Ajustes de terminal (alias, colores, utilidades como lsd y bat) de forma idempotente.
+
+- `karaoke/` – Proyecto para crear videos finales combinando audio y video. Incluye un servidor local Flask (`server.py`) y un lanzador `karaoke.sh` que inicia/detiene el servidor y guarda logs en `karaoke/temp/`.
+
+- `filexplorer/` – Explorador de archivos minimal por web. Servidor Flask (`server.py`) con assets en `static/` para navegar y realizar acciones básicas.
+
+- `devenv/` – Entorno de demos para front/back locales. Servidor Python sencillo (Flask) con `static/` para prototipos rápidos.
+
+- `streamio/` – Servidor local para reproducir/servir contenido multimedia con interfaz mínima (estático + endpoints sencillos).
+
 ## 🛠️ Scripts Incluidos
 
 ### `sync.sh`
@@ -87,6 +107,15 @@ slow
   - Manejo de entrada de usuario
   - Sistema de notificaciones
 
+## 🧷 ¿Qué es un wrapper?
+
+Un "wrapper" es un enlace que te permite ejecutar un script solo escribiendo su nombre (sin extensión) desde cualquier carpeta.
+
+- Se crean automáticamente con `sync` en tres lugares: `~/.shortcuts`, `~/bin` y `$PREFIX/bin`.
+- Para archivos `.sh`, el nombre del comando es el nombre del archivo sin extensión (ej. `descarga.sh` -> `descarga`).
+- Para archivos `.py`, usamos un pequeño `.sh` lanzador (por ejemplo `agente.sh` / `agentevoz.sh`) para asegurar el intérprete y las dependencias.
+- Si se borra el script original, `sync` limpia los enlaces rotos para evitar comandos huérfanos.
+
 ## 🔧 Personalización
 
 ### Variables importantes
@@ -109,6 +138,20 @@ Los scripts excluyen automáticamente:
 - Archivos de configuración (`configurar-*`, `instrucciones-*`)
 
 ## 🚨 Solución de Problemas
+
+## 🌐 Servidores locales (cómo funcionan)
+
+Varios proyectos (por ejemplo, `karaoke/`, `filexplorer/`, `devenv/`, `streamio/`) usan un patrón común:
+
+- Backend ligero en Python (Flask) en `server.py`.
+- Archivos estáticos en la carpeta `static/` (HTML/CSS/JS) servidos directamente.
+- El servidor se inicia en `0.0.0.0` para permitir acceso desde la red local.
+- Acceso típico: `http://127.0.0.1:<puerto>` en el propio teléfono, o `http://<IP_DEL_TELÉFONO>:<puerto>` desde otra máquina.
+- Para obtener la IP del teléfono en Termux, puedes usar por ejemplo:
+  ```bash
+  ip route get 1 | awk '{print $7; exit}'
+  ```
+- Logs y PID suelen guardarse en `./temp/` dentro del proyecto cuando aplica.
 
 ### Widget no muestra scripts nuevos
 ```bash
