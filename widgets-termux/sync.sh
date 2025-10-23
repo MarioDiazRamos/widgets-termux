@@ -81,6 +81,11 @@ done
 
 echo "Permisos y accesos automáticos configurados."
 
+# Limpiar enlaces rotos en binarios y accesos
+for d in "$CARPETA_BIN" "$PREFIX_BIN" "$CARPETA_SHORTCUTS"; do
+    find "$d" -xtype l -exec rm -f {} + 2>/dev/null || true
+done
+
 # --- Asegurar PATH incluye ~/bin ---
 PROFILE_FILE="$HOME/.profile"
 grep -q 'export PATH="$HOME/bin:$PATH"' "$PROFILE_FILE" 2>/dev/null || {
