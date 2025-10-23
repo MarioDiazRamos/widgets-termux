@@ -9,6 +9,18 @@ Este repositorio contiene scripts y utilidades para automatizar Termux en Androi
 
 Termux es una terminal Linux para Android: es muy poderosa y puede modificar archivos del dispositivo. Úsalo bajo tu responsabilidad, haz respaldo de tus datos y revisa los scripts antes de ejecutarlos.
 
+## Índice
+
+- [Termux: descarga rápida y aviso](#termux-descarga-rápida-y-aviso)
+- [Instalación y uso](#instalación-y-uso)
+- [Uso Diario](#-uso-diario)
+- [Proyectos del monorepo](#-proyectos-del-monorepo-qué-hace-cada-uno)
+- [Scripts Incluidos](#-scripts-incluidos)
+- [¿Qué es un wrapper?](#-qué-es-un-wrapper)
+- [Personalización](#-personalización)
+- [Servidores locales](#-servidores-locales-cómo-funcionan)
+- [Solución de Problemas](#-solución-de-problemas)
+
 
 ## Instalación y uso 
 
