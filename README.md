@@ -51,7 +51,7 @@ pkg install openssh
 sshd
 
 # Ver IP del dispositivo
-ip addr show wlan0
+ifconfig 2>/dev/null | awk '/inet / && $2 != "127.0.0.1" {print $2}'
 ```
 
 ## 📱 Uso Diario
@@ -59,20 +59,19 @@ ip addr show wlan0
 ### Desde Termux
 
 ```bash
-# Actualizar scripts manualmente
+# Sincronizar y actualizar scripts
 ~/sincronizar-widgets.sh
 
-# Ver estado del auto-actualizador
-~/actualizador-automatico.sh estado
-
-# Programar actualizaciones automáticas
-~/actualizador-automatico.sh programar
-
-# Verificar actualizaciones disponibles
-~/actualizador-automatico.sh verificar
-
-# Actualizar inmediatamente
-~/actualizador-automatico.sh ahora
+# Ejecutar scripts disponibles
+~/descarga.sh
+~/karaoke.sh
+~/agente.py
+~/dork.py
+~/doit.sh
+~/clima.sh
+~/apariencia.sh
+~/slow.sh
+# ...y otros según el menú y accesos directos
 ```
 
 ### Desde PC
