@@ -32,7 +32,6 @@ def buscar(q):
                 duck_url = f"https://duckduckgo.com/?q={quote(query)}&iax=images&ia=images"
                 headers = {'User-Agent': 'Mozilla/5.0'}
                 duck_r = requests.get(duck_url, headers=headers, timeout=10)
-                img_url = ''
                 if 'vqd=' in duck_r.text:
                     vqd = duck_r.text.split('vqd=')[1].split('&')[0]
                     api_url = f"https://duckduckgo.com/i.js?l=us-en&o=json&q={quote(query)}&vqd={vqd}"
