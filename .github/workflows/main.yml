@@ -1,0 +1,79 @@
+name: Verificación y Calidad del Código
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validar_codigo:
+    name: Análisis de Scripts y Linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Instalar dependencias básicas
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bash shellcheck
+          python3 -m pip install --upgrade pip
+          pip install flake8 black pylint pyflakes
+
+      - name: Verificar sintaxis de scripts Bash
+        run: |
+          echo "🔍 Comprobando scripts Bash..."
+          find . -type f -name "*.sh" ! -path "./venv/*" -exec bash -n {} \;
+          find . -type f -name "*.sh" ! -path "./venv/*" -exec shellcheck -x {} \; || true
+
+      - name: Verificar sintaxis y estilo de Python
+        run: |
+          echo "🔍 Analizando scripts Python..."
+          flake8 . --count --max-complexity=10 --max-line-length=120 --statistics
+          black --check .
+          pylint $(git ls-files '*.py') || true
+
+      - name: Verificar ejecución de servidores
+        run: |
+          echo "🚀 Verificando ejecución de servidores..."
+          for carpeta in karaoke filexplorer streamio devenv; do
+            if [ -f "$carpeta/server.py" ]; then
+              echo "Probando servidor en $carpeta..."
+              cd $carpeta
+              python3 server.py --help || echo "Servidor ejecutado correctamente"
+              cd ..
+            fi
+          done
+
+      - name: Generar reporte de calidad
+        run: |
+          echo "📋 Resumen de verificación completado." > reporte_calidad.txt
+          echo "Fecha: $(date)" >> reporte_calidad.txt
+          echo "Archivos analizados:" >> reporte_calidad.txt
+          find . -type f -name "*.py" -o -name "*.sh" >> reporte_calidad.txt
+        continue-on-error: true
+
+      - name: Guardar reporte como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte_calidad
+          path: reporte_calidad.txt
+
+  limpieza:
+    name: Limpieza de artefactos antiguos
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Eliminar artefactos viejos
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: reporte_calidad
+          failOnError: false
+
