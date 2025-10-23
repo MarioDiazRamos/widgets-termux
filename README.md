@@ -68,32 +68,7 @@ Para dudas, consulta INSTRUCCIONES-CONFIGURACION.md o abre un issue en el reposi
   - Detecta y limpia enlaces rotos
   - Muestra estadísticas de proceso
 
-### `actualizador-automatico.sh`
-- **Función**: Automatización y programación de actualizaciones
-- **Ubicación**: `~/actualizador-automatico.sh`
-- **Comandos**:
-  - `ahora` - Actualizar inmediatamente
-  - `programar` - Programar actualizaciones (cada 6h)
-  - `cancelar` - Cancelar auto-actualizaciones
-  - `estado` - Ver estado y logs
-  - `verificar` - Solo verificar actualizaciones
-
-### `sincronizar-pc.ps1` (PC)
-- **Función**: Sincronización desde PC usando SCP
-- **Comandos**:
-  - `configurar` - Configuración inicial
-  - `enviar` - Enviar cambios a Termux
-  - `recibir` - Recibir cambios desde Termux
-  - `desplegar` - Enviar + activar en Termux
-  - `estado` - Estado del repositorio local
-
-### `rsync-termux.ps1` (PC)
-- **Función**: Sincronización eficiente con rsync
-- **Comandos**:
-  - `enviar` - Sincronizar hacia Termux
-  - `recibir` - Sincronizar desde Termux
-  - `vigilar` - Vigilancia y sync automático
-- **Opciones**: `-Simulacion`, `-Forzar`
+ 
 
 ### `plantilla-script.sh`
 - **Función**: Plantilla para crear nuevos scripts
@@ -115,11 +90,6 @@ CARPETA_WIDGETS="$HOME/widgets-termux"
 CARPETA_SHORTCUTS="$HOME/.shortcuts"
 ```
 
-**En scripts de PC:**
-```powershell
-$REPO_LOCAL = ".\widgets-termux"
-$PUERTO_TERMUX = "8022"
-```
 
 ### Filtros de archivos
 
