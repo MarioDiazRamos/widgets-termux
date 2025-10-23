@@ -49,7 +49,7 @@ obtener_entrada_usuario() {
     local prompt="$1"
     local predeterminado="$2"
     local resultado
-    
+
     if [ -n "$predeterminado" ]; then
         read -p "$prompt [$predeterminado]: " resultado
         echo "${resultado:-$predeterminado}"
@@ -63,7 +63,7 @@ obtener_entrada_usuario() {
 confirmar_accion() {
     local mensaje="$1"
     local respuesta
-    
+
     read -p "$mensaje (s/n): " respuesta
     case "$respuesta" in
         [sS]|[sS][iI]|[yY]|[yY][eE][sS])
@@ -79,7 +79,7 @@ confirmar_accion() {
 enviar_notificacion() {
     local titulo="$1"
     local mensaje="$2"
-    
+
     if command -v termux-notification &> /dev/null; then
         termux-notification --title "$titulo" --content "$mensaje"
     fi
@@ -88,19 +88,19 @@ enviar_notificacion() {
 # Función principal del script
 main() {
     mostrar_encabezado
-    
+
     # Verificar dependencias
     if ! verificar_dependencias; then
         exit 1
     fi
-    
+
     # Tu lógica principal aquí
     mostrar_info "Iniciando $NOMBRE_SCRIPT..."
-    
+
     # Ejemplo: solicitar input
     # ENTRADA_USUARIO=$(obtener_entrada_usuario "Ingresa un valor")
     # mostrar_info "Valor ingresado: $ENTRADA_USUARIO"
-    
+
     # Ejemplo: confirmar acción
     # if confirmar_accion "¿Continuar con la operación?"; then
     #     mostrar_exito "Operación confirmada"
@@ -108,13 +108,13 @@ main() {
     #     mostrar_advertencia "Operación cancelada"
     #     exit 0
     # fi
-    
+
     # Aquí va tu código principal
     # ...
-    
+
     # Ejemplo: enviar notificación al final
     # enviar_notificacion "$NOMBRE_SCRIPT" "Operación completada exitosamente"
-    
+
     mostrar_exito "¡$NOMBRE_SCRIPT completado!"
 }
 

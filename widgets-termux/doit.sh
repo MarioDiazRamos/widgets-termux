@@ -355,7 +355,7 @@ def main():
     browser = ServiceBrowser(zeroconf, TYPE, listener)
     # Wait for the event to be set (service found) or timeout
     exit_event.wait(timeout=10) # 10 second timeout
-    
+
     zeroconf.close()
 if __name__ == '__main__':
     main()

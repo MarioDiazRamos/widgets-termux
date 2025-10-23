@@ -23,7 +23,7 @@ Termux es una terminal Linux para Android: es muy poderosa y puede modificar arc
 - [Solución de Problemas](#-solución-de-problemas)
 
 
-## Instalación y uso 
+## Instalación y uso
 
 
 1. Instala dependencias:
@@ -59,10 +59,10 @@ Para dudas, consulta INSTRUCCIONES-CONFIGURACION.md o abre un issue en el reposi
 # Sincronizar y actualizar scripts
 ~/sync.sh
 
-# Para ver scripts disponibles ejecuta desde cualquier parte 
+# Para ver scripts disponibles ejecuta desde cualquier parte
 proyectos
 
-# Ejecutar scripts disponibles desde cualquier parte: 
+# Ejecutar scripts disponibles desde cualquier parte:
 descarga
 karaoke
 agente
@@ -108,7 +108,7 @@ slow
   - Detecta y limpia enlaces rotos
   - Muestra estadísticas de proceso
 
- 
+
 
 ### `plantilla-script.sh`
 - **Función**: Plantilla para crear nuevos scripts

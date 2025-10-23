@@ -48,4 +48,3 @@ if ffmpeg -y -i "$VIDEO_ENTRADA" \
 else
     echo "Error al ajustar la velocidad."
 fi
-
