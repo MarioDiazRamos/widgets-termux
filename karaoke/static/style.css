@@ -1,0 +1,191 @@
+/* =============================
+   KARAOKE - ESTILOS PROFESIONALES
+   ============================= */
+/* 🎤 Karaoke - Tema Visual Moderno (Clean Code, Español) */
+
+body {
+    font-family: 'Poppins', Arial, sans-serif;
+    background: linear-gradient(135deg, #181c2b, #2b5876 80%, #4e4376);
+    color: #f3f3f3;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-attachment: fixed;
+}
+
+.contenedor-principal {
+    width: 100%;
+    max-width: 900px;
+    margin-top: 32px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.titulo-brillante {
+    font-size: 2.4rem;
+    font-weight: 700;
+    text-align: center;
+    background: linear-gradient(90deg, #00c6ff, #0072ff, #a855f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: resplandor 6s ease-in-out infinite;
+}
+
+@keyframes resplandor {
+    0%, 100% { filter: drop-shadow(0 0 8px #00c6ff); }
+    50% { filter: drop-shadow(0 0 14px #a855f7); }
+}
+
+.tarjeta {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.13);
+    border-radius: 14px;
+    padding: 1.2rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.28);
+    transition: box-shadow 0.3s, transform 0.3s;
+}
+.tarjeta:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 32px rgba(0,0,0,0.38);
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 10px 14px;
+    margin-top: 8px;
+    border-radius: 9px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.09);
+    color: #f3f3f3;
+    font-size: 1rem;
+    outline: none;
+    transition: border 0.2s, box-shadow 0.2s;
+    backdrop-filter: blur(5px);
+    box-sizing: border-box;
+}
+input:focus, select:focus, textarea:focus {
+    border-color: #00c6ff;
+    box-shadow: 0 0 8px #00c6ff55;
+}
+
+.boton-neon {
+    background: linear-gradient(90deg, #00c6ff, #0072ff);
+    border: none;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 11px;
+    font-size: 1.08rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s, box-shadow 0.3s, transform 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 0 10px #0072ff66;
+}
+.boton-neon:hover {
+    background: linear-gradient(90deg, #a855f7, #00c6ff);
+    box-shadow: 0 0 20px #a855f7cc, 0 0 10px #00c6ff88;
+    transform: translateY(-2px);
+}
+
+.titulo-seccion {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    text-shadow: 0 0 6px #ffffff33;
+}
+
+.grupo-opciones {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.aparecer {
+    animation: aparecer 0.7s ease forwards;
+    opacity: 0;
+}
+@keyframes aparecer {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 600px) {
+    body { padding: 0.5rem; }
+    .contenedor-principal { padding: 0.5rem; gap: 1rem; }
+    .titulo-brillante { font-size: 1.4rem; }
+    .tarjeta { padding: 0.7rem; }
+    .boton-neon { width: 100%; font-size: 0.98rem; padding: 10px; }
+    input, select { font-size: 0.95rem; }
+}
+
+/* Mejorar foco visual */
+input:focus, select:focus, textarea:focus, button:focus, a:focus {
+    outline: 2px solid var(--acento);
+    outline-offset: 2px;
+}
+
+
+@media (max-width: 900px) {
+    .contenedor-principal {
+        padding: 0.5rem;
+    }
+    .tarjeta {
+        padding: 1.1rem 0.5rem 1rem 0.5rem;
+        margin-bottom: 1.2rem;
+    }
+    .fila-formulario {
+        flex-direction: column;
+        gap: 0.7rem;
+    }
+    .grupo-formulario, .grupo-formulario.ancho {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+    .encabezado-principal h1 {
+        font-size: 1.2rem;
+    }
+    .tarjeta h2 {
+        font-size: 1.05rem;
+    }
+    .boton, .boton-primario, .boton-secundario {
+        font-size: 0.98em;
+        padding: 0.6em 1em;
+    }
+    .previsualizacion-archivo video, .previsualizacion-archivo audio {
+        max-width: 100%;
+        max-height: 120px;
+    }
+    .footer-right {
+        display: block;
+        margin-top: 0.5em;
+    }
+}
+
+@media (max-width: 500px) {
+    .tarjeta {
+        padding: 0.7rem 0.2rem 0.7rem 0.2rem;
+    }
+    .encabezado-principal h1 {
+        font-size: 1rem;
+    }
+    .tarjeta h2 {
+        font-size: 0.98rem;
+    }
+    .boton, .boton-primario, .boton-secundario {
+        font-size: 0.93em;
+        padding: 0.5em 0.7em;
+    }
+    .previsualizacion-archivo video, .previsualizacion-archivo audio {
+        max-width: 100%;
+        max-height: 80px;
+    }
+    .footer-right {
+        font-size: 0.9em;
+    }
+}

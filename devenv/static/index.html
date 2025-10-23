@@ -1,0 +1,103 @@
+
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+  <title>devenv control</title>
+  <link rel="stylesheet" href="/style.css"/>
+</head>
+<body>
+  <header class="header">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#fbbf24"/><path d="M7 13l3 3 7-7" stroke="#2563eb" stroke-width="2" fill="none"/></svg>
+    <span class="header-title">devenv</span>
+    <span class="header-desc">Control de archivos y jobs</span>
+  </header>
+  <main class="container">
+    <div class="card">
+      <section aria-labelledby="estado">
+        <h2 id="estado">Estado</h2>
+        <button id="btnHealth" aria-label="Probar API health">
+          <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#fff2"/><path d="M6 10l2 2 5-5" stroke="#fff" stroke-width="2" fill="none"/></svg>
+          Probar /api/health
+        </button>
+        <pre id="healthOut" aria-live="polite"></pre>
+      </section>
+    </div>
+    <div class="card">
+      <section aria-labelledby="archivos">
+        <h2 id="archivos">Explorador de archivos</h2>
+        <nav id="breadcrumb" class="breadcrumb" aria-label="Ruta de carpetas"></nav>
+        <div id="explorer-list"></div>
+        <div class="explorer-actions">
+          <button id="btnUp" title="Subir nivel">
+            <svg viewBox="0 0 20 20"><path d="M10 14V6M6 10l4-4 4 4" stroke="#fff" stroke-width="2" fill="none"/></svg>
+            Arriba
+          </button>
+          <button id="btnList" title="Refrescar">
+            <svg viewBox="0 0 20 20"><rect x="3" y="6" width="14" height="2" rx="1"/><rect x="3" y="12" width="14" height="2" rx="1"/></svg>
+            Refrescar
+          </button>
+          <button id="btnMkdir" title="Nueva carpeta">
+            <svg viewBox="0 0 20 20"><rect x="3" y="9" width="14" height="2" rx="1"/><rect x="9" y="3" width="2" height="14" rx="1"/></svg>
+            Carpeta
+          </button>
+          <button id="btnCreate" title="Nuevo archivo">
+            <svg viewBox="0 0 20 20"><rect x="3" y="9" width="14" height="2" rx="1"/></svg>
+            Archivo
+          </button>
+        </div>
+        <div class="explorer-inputs">
+          <input id="mkdirPath" placeholder="Nombre nueva carpeta" autocomplete="off"/>
+          <input id="createPath" placeholder="Nombre nuevo archivo" autocomplete="off"/>
+        </div>
+        <div class="explorer-ops">
+          <input id="moveSrc" placeholder="Origen" autocomplete="off"/>
+          <input id="moveDst" placeholder="Destino" autocomplete="off"/>
+          <button id="btnMove" title="Mover">
+            <svg viewBox="0 0 20 20"><path d="M5 10h10M13 6l4 4-4 4" stroke="#fff" stroke-width="2" fill="none"/></svg>
+            Mover
+          </button>
+          <input id="delPath" placeholder="Archivo/carpeta a borrar" autocomplete="off"/>
+          <label for="delRecursive" style="display:flex;align-items:center;gap:0.3em;">
+            <input type="checkbox" id="delRecursive"/> Recursivo
+          </label>
+          <button id="btnDelete" title="Borrar">
+            <svg viewBox="0 0 20 20"><rect x="5" y="9" width="10" height="2" rx="1"/></svg>
+            Borrar
+          </button>
+        </div>
+      </section>
+    </div>
+    <div class="card">
+      <section aria-labelledby="jobs">
+        <h2 id="jobs">Jobs</h2>
+        <div class="row">
+          <input id="jobCmd" placeholder="comando (opcional), ej: echo hola && sleep 3" autocomplete="off"/>
+          <button id="btnStartJob">
+            <svg viewBox="0 0 20 20"><polygon points="6,4 16,10 6,16" fill="#fff"/></svg>
+            Iniciar Job
+          </button>
+        </div>
+        <div class="row">
+          <input id="jobId" placeholder="job-id" autocomplete="off"/>
+          <button id="btnStatus">
+            <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" stroke="#fff" stroke-width="2" fill="none"/><circle cx="10" cy="10" r="3" fill="#fff"/></svg>
+            Estado
+          </button>
+          <button id="btnStop">
+            <svg viewBox="0 0 20 20"><rect x="6" y="6" width="8" height="8" rx="2" fill="#fff"/></svg>
+            Detener
+          </button>
+          <button id="btnLog">
+            <svg viewBox="0 0 20 20"><rect x="4" y="4" width="12" height="12" rx="2" fill="#fff"/><rect x="7" y="7" width="6" height="2" rx="1" fill="#2563eb"/><rect x="7" y="11" width="6" height="2" rx="1" fill="#2563eb"/></svg>
+            Ver Log
+          </button>
+        </div>
+        <pre id="jobOut" aria-live="polite"></pre>
+      </section>
+    </div>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

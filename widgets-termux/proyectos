@@ -1,0 +1,9 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# Wrapper para mostrar los lanzadores disponibles en ~/bin
+BIN_DIR="$HOME/bin"
+
+SCRIPT_NAME="$(basename "$0")"
+for wrapper in "$BIN_DIR"/*; do
+    WRAP_NAME="$(basename "$wrapper")"
+    [ -x "$wrapper" ] && [ "$WRAP_NAME" != "$SCRIPT_NAME" ] && echo "$WRAP_NAME"
+done
