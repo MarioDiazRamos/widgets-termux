@@ -17,11 +17,10 @@ Este repositorio contiene scripts y utilidades para automatizar Termux en Androi
   git clone https://github.com/MarioDiazRamos/widgets-termux.git
   ```
 3. Sincroniza y configura todo automáticamente:
-   ```bash
-   cd ~/Proyectos/widgets-termux
-   bash sync.sh
-   ```
-   Esto dará permisos, creará accesos y wrappers en ~/.shortcuts y ~/bin. No necesitas configurar nada más.
+  ```bash
+  bash ~/Proyectos/widgets-termux/sync.sh
+  ```
+  Esto dará permisos, creará accesos y wrappers en ~/.shortcuts y ~/bin. No necesitas configurar nada más.
 4. (Opcional) Ejecuta:
    ```bash
    termux-reload-settings
