@@ -47,15 +47,18 @@ Para dudas, consulta INSTRUCCIONES-CONFIGURACION.md o abre un issue en el reposi
 # Sincronizar y actualizar scripts
 ~/sync.sh
 
-# Ejecutar scripts disponibles
-~/descarga.sh
-~/karaoke.sh
-~/agente.py
-~/dork.py
-~/doit.sh
-~/clima.sh
-~/apariencia.sh
-~/slow.sh
+# Para ver scripts disponibles ejecuta desde cualquier parte 
+proyecto
+
+# Ejecutar scripts disponibles desde cualquier parte: 
+descarga
+karaoke
+agente
+dork
+doit
+clima
+apariencia
+slow
 # ...y otros según el menú y accesos directos
 ```
 
