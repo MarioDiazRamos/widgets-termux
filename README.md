@@ -48,7 +48,7 @@ Para dudas, consulta INSTRUCCIONES-CONFIGURACION.md o abre un issue en el reposi
 ~/sync.sh
 
 # Para ver scripts disponibles ejecuta desde cualquier parte 
-proyecto
+proyectos
 
 # Ejecutar scripts disponibles desde cualquier parte: 
 descarga
