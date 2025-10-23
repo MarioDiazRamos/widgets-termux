@@ -49,8 +49,3 @@ else
     echo "Error al ajustar la velocidad."
 fi
 
-if [ $? -eq 0 ]; then
-        echo "Video creado: $SALIDA"
-else
-        echo "Error al ajustar la velocidad."
-fi

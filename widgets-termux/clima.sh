@@ -33,8 +33,9 @@ obtener_clima() {
     info "Consultando clima para ($lat, $lon)..."
     local url="https://api.open-meteo.com/v1/forecast"
     local params="latitude=${lat}&longitude=${lon}&current_weather=true&hourly=precipitation_probability,temperature_2m&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=1"
-    local clima_data=$(curl -s "${url}?${params}" --connect-timeout 10)
-        if [ $? -ne 0 ] || [ -z "$clima_data" ]; then error "Error al obtener datos del clima"; return 1; fi
+        local clima_data
+        if ! clima_data=$(curl -s "${url}?${params}" --connect-timeout 10); then error "Error al obtener datos del clima"; return 1; fi
+        if [ -z "$clima_data" ]; then error "Error al obtener datos del clima"; return 1; fi
     echo "$clima_data"
 }
 
@@ -59,25 +60,28 @@ generar_recomendacion() {
 obtener_ciudad() {
     local lat="$1" lon="$2"
     local geo_url="https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=es"
-    local geo_data=$(curl -s "$geo_url" --connect-timeout 5)
-    if [ $? -eq 0 ] && [ -n "$geo_data" ]; then
-        local ciudad=$(echo "$geo_data" | jq -r '.city // .locality // .countryName // "Ubicación actual"' 2>/dev/null)
-        [ "$ciudad" != "null" ] && [ -n "$ciudad" ] && { echo "$ciudad"; return; }
-    fi
+        local geo_data
+        if ! geo_data=$(curl -s "$geo_url" --connect-timeout 5); then echo "Ubicación actual"; return; fi
+        if [ -n "$geo_data" ]; then
+            local ciudad=$(echo "$geo_data" | jq -r '.city // .locality // .countryName // "Ubicación actual"' 2>/dev/null)
+            if [ "$ciudad" != "null" ] && [ -n "$ciudad" ]; then echo "$ciudad"; return; fi
+        fi
     echo "Ubicación actual"
 }
 
 mostrar_clima() {
     encabezado
     verificar_dependencias || return 1
-    local ubicacion_json=$(obtener_ubicacion) || return 1
+        local ubicacion_json
+        if ! ubicacion_json=$(obtener_ubicacion); then return 1; fi
     local lat=$(echo "$ubicacion_json" | jq -r '.latitude' 2>/dev/null)
     local lon=$(echo "$ubicacion_json" | jq -r '.longitude' 2>/dev/null)
     [ "$lat" = "null" ] || [ "$lon" = "null" ] || [ -z "$lat" ] || [ -z "$lon" ] && { error "Error al procesar coordenadas"; return 1; }
     exito "Ubicación: $lat, $lon"
-    local ciudad=$(obtener_ciudad "$lat" "$lon")
-        local clima_json=$(obtener_clima "$lat" "$lon")
-        if [ $? -ne 0 ]; then return 1; fi
+        local ciudad
+        if ! ciudad=$(obtener_ciudad "$lat" "$lon"); then return 1; fi
+        local clima_json
+        if ! clima_json=$(obtener_clima "$lat" "$lon"); then return 1; fi
     local temp_actual=$(echo "$clima_json" | jq -r '.current_weather.temperature' 2>/dev/null)
     local codigo_clima=$(echo "$clima_json" | jq -r '.current_weather.weathercode' 2>/dev/null)
     local velocidad_viento=$(echo "$clima_json" | jq -r '.current_weather.windspeed' 2>/dev/null)
