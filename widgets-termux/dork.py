@@ -1,36 +1,86 @@
-# dork.py
-# Script principal para generación de Google Dorks con configuración interactiva de API key
-# Ver código en la edición anterior (ya actualizado para pedir y guardar API key)
+#!/usr/bin/env python3
+# dork.py – Generador local de Google Dorks (sin dependencias externas)
+# Uso:
+#   python dork.py "palabra clave" [--json] [--open N]
+#   python dork.py                 # modo interactivo
 
-import os, requests, json, datetime, urllib.parse, subprocess
+import argparse
+import json
+import os
+import shlex
+import subprocess
+import sys
+import urllib.parse
 
-# Configuración interactiva de API_KEY
-CONFIG_PATH = os.path.expanduser("~/.dork_config.json")
-def pedir_api_key():
-    print("\nPara usar este script necesitas tu propia API key de Gemini.")
-    print("1. Ve a https://aistudio.google.com/app/apikey\n2. Genera tu clave y pégala aquí.")
-    api = input("Pega tu API key: ").strip()
-    if not api:
-        print("No se ingresó clave. Saliendo."); exit(1)
-    with open(CONFIG_PATH, "w") as f:
-        json.dump({"API_KEY": api}, f)
-    return api
+TEMPLATES = [
+    'intitle:"{kw}"',
+    'inurl:"{kw}"',
+    'intext:"{kw}"',
+    '"{kw}" filetype:pdf',
+    '"{kw}" filetype:docx',
+    '"{kw}" filetype:xlsx',
+    '"{kw}" "index of"',
+    '"{kw}" (password|contraseña) -github -stackoverflow',
+    '"{kw}" (admin|login|panel) inurl:(login|admin)',
+    'site:*.* "{kw}"',
+    '"{kw}" ext:sql | ext:bak',
+    '"{kw}" (confidential|privado|restringido) -site:github.com',
+]
 
-def cargar_api_key():
-    if os.path.exists(CONFIG_PATH):
+
+def generate_dorks(keyword: str) -> list[str]:
+    kw = keyword.strip()
+    if not kw:
+        return []
+    return [t.format(kw=kw) for t in TEMPLATES]
+
+
+def open_in_browser(query: str) -> None:
+    url = "https://www.google.com/search?q=" + urllib.parse.quote(query)
+    # Intentar con termux-open-url si existe, si no usar xdg-open
+    for cmd in ("termux-open-url", "xdg-open", "start"):  # 'start' para Windows
         try:
-            with open(CONFIG_PATH) as f:
-                return json.load(f)["API_KEY"]
-        except Exception:
-            pass
-    return pedir_api_key()
+            if subprocess.call([cmd, url]) == 0:
+                return
+        except FileNotFoundError:
+            continue
+    print("No se pudo abrir el navegador automáticamente. URL:", url)
 
-CLAVE_API = cargar_api_key()
-MODELO = "gemini-2.0-flash"
-URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODELO}:generateContent?key={CLAVE_API}"
-PROMPT_SISTEMA = (
-    "Eres un asistente que genera Google Dorks para uso legítimo. "
-    "Responde solo en español y solo con JSON válido, sin texto adicional. "
-    "Genera hasta 12 dorks variados y útiles."
-)
-# ...resto del código original...
+
+def main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(description="Generador local de Google Dorks")
+    parser.add_argument("keyword", nargs="?", help="Palabra clave o frase")
+    parser.add_argument("--json", action="store_true", help="Imprime solo JSON")
+    parser.add_argument("--open", type=int, default=0, help="Abrir en navegador el dork N (1..N)")
+    args = parser.parse_args(argv)
+
+    keyword = args.keyword
+    if not keyword:
+        try:
+            keyword = input("Palabra clave para generar dorks: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            return 1
+
+    dorks = generate_dorks(keyword)
+    payload = {"keyword": keyword, "generated": dorks}
+
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+    else:
+        print(f"\nDorks generados para: {keyword}\n")
+        for i, d in enumerate(dorks, 1):
+            print(f"{i:2d}) {d}")
+        print("\nSugerencia: usa --json para obtenerlos en JSON o --open N para abrir uno.")
+
+    if args.open:
+        idx = args.open - 1
+        if 0 <= idx < len(dorks):
+            open_in_browser(dorks[idx])
+        else:
+            print("Índice fuera de rango.", file=sys.stderr)
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))
