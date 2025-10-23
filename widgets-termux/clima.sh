@@ -34,7 +34,7 @@ obtener_clima() {
     local url="https://api.open-meteo.com/v1/forecast"
     local params="latitude=${lat}&longitude=${lon}&current_weather=true&hourly=precipitation_probability,temperature_2m&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=1"
     local clima_data=$(curl -s "${url}?${params}" --connect-timeout 10)
-    [ $? -ne 0 ] || [ -z "$clima_data" ] && { error "Error al obtener datos del clima"; return 1; }
+        if [ $? -ne 0 ] || [ -z "$clima_data" ]; then error "Error al obtener datos del clima"; return 1; fi
     echo "$clima_data"
 }
 
@@ -60,7 +60,7 @@ obtener_ciudad() {
     local lat="$1" lon="$2"
     local geo_url="https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=es"
     local geo_data=$(curl -s "$geo_url" --connect-timeout 5)
-    [ $? -eq 0 ] && [ -n "$geo_data" ] && {
+        if [ $? -eq 0 ] && [ -n "$geo_data" ]; then
         local ciudad=$(echo "$geo_data" | jq -r '.city // .locality // .countryName // "Ubicación actual"' 2>/dev/null)
         [ "$ciudad" != "null" ] && [ -n "$ciudad" ] && { echo "$ciudad"; return; }
     }
@@ -76,7 +76,8 @@ mostrar_clima() {
     [ "$lat" = "null" ] || [ "$lon" = "null" ] || [ -z "$lat" ] || [ -z "$lon" ] && { error "Error al procesar coordenadas"; return 1; }
     exito "Ubicación: $lat, $lon"
     local ciudad=$(obtener_ciudad "$lat" "$lon")
-    local clima_json=$(obtener_clima "$lat" "$lon") || return 1
+        local clima_json=$(obtener_clima "$lat" "$lon")
+        if [ $? -ne 0 ]; then return 1; fi
     local temp_actual=$(echo "$clima_json" | jq -r '.current_weather.temperature' 2>/dev/null)
     local codigo_clima=$(echo "$clima_json" | jq -r '.current_weather.weathercode' 2>/dev/null)
     local velocidad_viento=$(echo "$clima_json" | jq -r '.current_weather.windspeed' 2>/dev/null)

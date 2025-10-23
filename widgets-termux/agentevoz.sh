@@ -5,5 +5,5 @@ ensure_cmd python python
 ensure_cmd termux-tts-speak termux-api
 ensure_cmd termux-speech-to-text termux-api
 ensure_python_module requests
-cd "$HOME/Proyectos/widgets-termux"
+cd "$HOME/Proyectos/widgets-termux" || exit
 python agentevoz.py "$@"

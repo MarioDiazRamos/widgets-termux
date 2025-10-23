@@ -1,5 +1,3 @@
-
-
 #!/bin/bash
 PROYECTO_DIR="$HOME/Proyectos/filexplorer"
 PID_ARCHIVO="$PROYECTO_DIR/filexplorer.pid"
@@ -25,9 +23,7 @@ iniciar_servidor() {
   nohup python3 "$PROYECTO_DIR/server.py" > "$LOG_ARCHIVO" 2>&1 &
   echo $! > "$PID_ARCHIVO"
   echo "Logs: $LOG_ARCHIVO"
-}
-
-detener_servidor() {
+#!/bin/bash
   if [ ! -f "$PID_ARCHIVO" ]; then
     echo "El servidor no está en ejecución."
     exit 1

@@ -184,7 +184,6 @@ def transponer_audio():
 def mezclar_karaoke():
     datos = request.json or {}
     audio = datos.get("audio")
-    url_yt = datos.get("youtube_url")
     opcion_sincronizar = int(datos.get("sync_option", 1))
     retardo_sincro = float(datos.get("sync_delay", 0))
     ruta_video = datos.get("video_path")

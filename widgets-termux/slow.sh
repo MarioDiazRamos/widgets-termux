@@ -40,10 +40,14 @@ SALIDA="$NOMBRE_DIRECTORIO/${NOMBRE_BASE%.*}_vel${PORCENTAJE_VELOCIDAD}.mp4"
 
 echo "Ajustando velocidad al ${PORCENTAJE_VELOCIDAD}%..."
 
-ffmpeg -y -i "$VIDEO_ENTRADA" \
+if ffmpeg -y -i "$VIDEO_ENTRADA" \
     -filter_complex "[0:v]setpts=${VALOR_SETPTS}*PTS[v];[0:a]atempo=${VELOCIDAD_DECIMAL}[a]" \
     -map "[v]" -map "[a]" \
-    "$SALIDA"
+    "$SALIDA"; then
+    echo "Video creado: $SALIDA"
+else
+    echo "Error al ajustar la velocidad."
+fi
 
 if [ $? -eq 0 ]; then
         echo "Video creado: $SALIDA"
