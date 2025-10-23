@@ -56,10 +56,10 @@ Para dudas, consulta INSTRUCCIONES-CONFIGURACION.md o abre un issue en el reposi
 
 ## 🛠️ Scripts Incluidos
 
-### `sincronizar-widgets.sh`
+### `sync.sh`
 - **Función**: Script principal de sincronización para Termux
-- **Ubicación**: `~/sincronizar-widgets.sh`
-- **Uso**: `./sincronizar-widgets.sh`
+- **Ubicación**: `~/sync.sh`
+- **Uso**: `./sync.sh`
 - **Características**:
   - Clona repositorio en primera ejecución
   - Actualiza con `git pull` en siguientes usos
@@ -108,7 +108,7 @@ Para dudas, consulta INSTRUCCIONES-CONFIGURACION.md o abre un issue en el reposi
 
 ### Variables importantes
 
-**En `sincronizar-widgets.sh`:**
+**En `sync.sh`:**
 ```bash
 REPO_URL="https://github.com/tu-usuario/widgets-termux.git"
 CARPETA_WIDGETS="$HOME/widgets-termux"
@@ -137,7 +137,7 @@ Los scripts excluyen automáticamente:
 ls -la ~/.shortcuts/
 
 # Recrear enlaces
-~/sincronizar-widgets.sh
+~/sync.sh
 
 # Reiniciar widget o dispositivo
 ```
