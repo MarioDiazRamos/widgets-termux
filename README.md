@@ -18,7 +18,7 @@ Este repositorio contiene scripts y utilidades para automatizar Termux en Androi
   ```bash
   bash ~/Proyectos/widgets-termux/sync.sh
   ```
-  Esto dará permisos en todo `~/Proyectos`, creará accesos y wrappers en `~/.shortcuts` y `~/bin`, añadirá `~/bin` al PATH y verificará dependencias básicas (sin forzar actualizaciones).
+  Esto dará permisos en todo `~/Proyectos`, creará accesos y wrappers en `~/.shortcuts`, `~/bin` y también en `$PREFIX/bin` (para que funcionen de inmediato al escribir solo el nombre), añadirá `~/bin` al PATH y verificará dependencias básicas (sin forzar actualizaciones).
 
 4. (Opcional) Ejecuta:
    ```bash

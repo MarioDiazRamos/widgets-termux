@@ -17,9 +17,12 @@ echo "Sincronización completada."
 # --- Permisos y wrappers automáticos ---
 CARPETA_SHORTCUTS="$HOME/.shortcuts"
 CARPETA_BIN="$HOME/bin"
+PREFIX_DIR="${PREFIX:-/data/data/com.termux/files/usr}"
+PREFIX_BIN="$PREFIX_DIR/bin"
 
 mkdir -p "$CARPETA_SHORTCUTS"
 mkdir -p "$CARPETA_BIN"
+mkdir -p "$PREFIX_BIN"
 
 # Permisos amplios en todo el repositorio de Proyectos (lectura/escritura para usuario y ejecución donde aplique)
 chmod -R u+rwX,go+rX "$CARPETA_REPO" 2>/dev/null
@@ -35,6 +38,8 @@ for s in "$CARPETA_WIDGETS"/*; do
     # Wrapper en bin (sin extensión)
     nombre_bin="${nombre%.*}"
     ln -sf "$s" "$CARPETA_BIN/$nombre_bin"
+    # Wrapper adicional en $PREFIX/bin para disponibilidad inmediata
+    ln -sf "$s" "$PREFIX_BIN/$nombre_bin"
 done
 
 echo "Permisos y accesos automáticos configurados."
