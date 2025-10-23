@@ -7,19 +7,22 @@ import signal
 import subprocess
 from pathlib import Path
 from flask import Flask, jsonify, request, send_from_directory
+
 APP_DIR = Path(__file__).resolve().parent
 HOME = Path(os.path.expanduser("~")).resolve()
 JOBS_DIR = APP_DIR / "jobs_tmp"
 STATIC_DIR = APP_DIR / "static"
 JOBS_DIR.mkdir(parents=True, exist_ok=True)
 
-app = Flask(__name__, static_folder=str(STATIC_DIR), static_url_path='')
+app = Flask(__name__, static_folder=str(STATIC_DIR), static_url_path="")
+
 
 def safe_join(base: Path, rel: str) -> Path:
     target = (base / rel.lstrip("/")).resolve()
     if not str(target).startswith(str(HOME)):
         raise ValueError("Ruta fuera de HOME no permitida")
     return target
+
 
 def job_paths(job_id: str):
     base = JOBS_DIR / job_id
@@ -29,6 +32,7 @@ def job_paths(job_id: str):
         "meta": base.with_suffix(".json"),
     }
 
+
 def proc_running(pid: int) -> bool:
     try:
         os.kill(pid, 0)
@@ -36,9 +40,11 @@ def proc_running(pid: int) -> bool:
     except OSError:
         return False
 
+
 @app.get("/api/health")
 def health():
     return jsonify(status="ok", time=int(time.time()))
+
 
 @app.get("/api/fs/list")
 def fs_list():
@@ -48,21 +54,26 @@ def fs_list():
         if not p.exists():
             return jsonify(error="No existe"), 404
         entries = []
-        for child in sorted(p.iterdir(), key=lambda x: (not x.is_dir(), x.name.lower())):
+        for child in sorted(
+            p.iterdir(), key=lambda x: (not x.is_dir(), x.name.lower())
+        ):
             try:
                 stat = child.stat()
-                entries.append({
-                    "name": child.name,
-                    "path": str(child),
-                    "is_dir": child.is_dir(),
-                    "size": stat.st_size,
-                    "mtime": int(stat.st_mtime),
-                })
+                entries.append(
+                    {
+                        "name": child.name,
+                        "path": str(child),
+                        "is_dir": child.is_dir(),
+                        "size": stat.st_size,
+                        "mtime": int(stat.st_mtime),
+                    }
+                )
             except Exception:
                 continue
         return jsonify(path=str(p), entries=entries)
     except Exception as e:
         return jsonify(error=str(e)), 400
+
 
 @app.post("/api/fs/mkdir")
 def fs_mkdir():
@@ -76,6 +87,7 @@ def fs_mkdir():
         return jsonify(ok=True, path=str(p))
     except Exception as e:
         return jsonify(error=str(e)), 400
+
 
 @app.post("/api/fs/create")
 def fs_create():
@@ -91,6 +103,7 @@ def fs_create():
         return jsonify(ok=True, path=str(p), size=len(content.encode("utf-8")))
     except Exception as e:
         return jsonify(error=str(e)), 400
+
 
 @app.post("/api/fs/move")
 def fs_move():
@@ -108,6 +121,7 @@ def fs_move():
     except Exception as e:
         return jsonify(error=str(e)), 400
 
+
 @app.post("/api/fs/delete")
 def fs_delete():
     data = request.get_json(silent=True) or {}
@@ -120,6 +134,7 @@ def fs_delete():
         if p.is_dir():
             if recursive:
                 import shutil
+
                 shutil.rmtree(p)
             else:
                 p.rmdir()
@@ -129,12 +144,16 @@ def fs_delete():
     except Exception as e:
         return jsonify(error=str(e)), 400
 
+
 @app.post("/api/jobs/start")
 def jobs_start():
     data = request.get_json(silent=True) or {}
     cmd = data.get("cmd")
     if not cmd:
-        cmd = "sh -lc 'echo Iniciando trabajo; date; sleep 5; echo Trabajo listo; date'"
+        cmd = (
+            "sh -lc 'echo Iniciando trabajo; date; sleep 5; "
+            "echo Trabajo listo; date'"
+        )
     if isinstance(cmd, list):
         shell = False
         popen_cmd = cmd
@@ -156,7 +175,7 @@ def jobs_start():
         "pid": None,
     }
     with open(paths["log"], "w", encoding="utf-8") as logf:
-        logf.write(f"== Job {job_id} ==\nCMD: {cmd_str}\nSTART: {time.ctime()}\n\n")
+        logf.write(f"== Job {job_id} ==\nCMD: {cmd_str}\n" f"START: {time.ctime()}\n\n")
     with open(paths["meta"], "w", encoding="utf-8") as mf:
         json.dump(meta, mf)
 
@@ -167,7 +186,7 @@ def jobs_start():
             stdout=logf,
             stderr=logf,
             cwd=str(HOME),
-            preexec_fn=os.setsid
+            preexec_fn=os.setsid,
         )
     with open(paths["pid"], "w", encoding="utf-8") as pf:
         pf.write(str(proc.pid))
@@ -175,6 +194,7 @@ def jobs_start():
     with open(paths["meta"], "w", encoding="utf-8") as mf:
         json.dump(meta, mf)
     return jsonify(ok=True, id=job_id, pid=proc.pid, log=Path(paths["log"]).name)
+
 
 @app.get("/api/jobs/status/<job_id>")
 def jobs_status(job_id):
@@ -197,6 +217,7 @@ def jobs_status(job_id):
                 json.dump(meta, mf)
     return jsonify(meta)
 
+
 @app.post("/api/jobs/stop/<job_id>")
 def jobs_stop(job_id):
     paths = job_paths(job_id)
@@ -209,6 +230,7 @@ def jobs_stop(job_id):
     except Exception as e:
         return jsonify(error=str(e)), 400
     return jsonify(ok=True, stopped=pid)
+
 
 @app.get("/api/jobs/log/<job_id>")
 def jobs_log(job_id):
@@ -224,9 +246,11 @@ def jobs_log(job_id):
     except Exception as e:
         return jsonify(error=str(e)), 400
 
+
 @app.get("/")
 def index():
     return send_from_directory(str(STATIC_DIR), "index.html")
+
 
 if __name__ == "__main__":
     host = os.environ.get("HOST", "0.0.0.0")

@@ -8,15 +8,20 @@ import time
 
 # === CONFIGURACIÓN ===
 CONFIG_PATH = os.path.expanduser("~/.agentevoz_config.json")
+
+
 def pedir_api_key():
     print("\nPara usar el agente de voz necesitas tu propia API key de Gemini.")
-    print("1. Ve a https://aistudio.google.com/app/apikey\n2. Genera tu clave y pégala aquí.")
+    print("1. Ve a https://aistudio.google.com/app/apikey")
+    print("2. Genera tu clave y pégala aquí.")
     api = input("Pega tu API key: ").strip()
     if not api:
-        print("No se ingresó clave. Saliendo."); exit(1)
+        print("No se ingresó clave. Saliendo.")
+        exit(1)
     with open(CONFIG_PATH, "w") as f:
         json.dump({"API_KEY": api}, f)
     return api
+
 
 def cargar_api_key():
     if os.path.exists(CONFIG_PATH):
@@ -27,14 +32,23 @@ def cargar_api_key():
             pass
     return pedir_api_key()
 
+
 API_KEY = cargar_api_key()
 MODELO = "gemini-2.0-flash"
-URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODELO}:generateContent?key={API_KEY}"
-ROJO = '\033[0;31m'; VERDE = '\033[0;32m'; AMARILLO = '\033[1;33m'; AZUL = '\033[0;34m'; MORADO = '\033[0;35m'; CYAN = '\033[0;36m'; SIN_COLOR = '\033[0m'
+BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
+URL = f"{BASE_URL}/{MODELO}:generateContent?key={API_KEY}"
+ROJO = "\033[0;31m"
+VERDE = "\033[0;32m"
+AMARILLO = "\033[1;33m"
+AZUL = "\033[0;34m"
+MORADO = "\033[0;35m"
+CYAN = "\033[0;36m"
+SIN_COLOR = "\033[0m"
 PROMPT_SISTEMA = (
     "Eres un agente de voz en Termux Android. "
     "Convierte instrucciones de voz en comandos ejecutables. "
-    "Responde solo con comandos válidos para Termux o termux-api, sin explicaciones ni markdown. "
+    "Responde solo con comandos válidos para Termux o termux-api, "
+    "sin explicaciones ni markdown. "
     "No uses tuberías, awk, grep, jq ni expresiones complejas. "
     "Si no puedes hacerlo, responde: echo 'No puedo hacerlo en Termux/Android'. "
     "Comandos simples, seguros y ejecutables."
@@ -42,27 +56,42 @@ PROMPT_SISTEMA = (
 
 # === FUNCIONES DE VOZ ===
 
+
 def verificar_termux_api():
     try:
         subprocess.run(["termux-tts-speak", "--help"], capture_output=True, timeout=5)
         return True
-    except:
+    except Exception:
         return False
+
 
 def hablar(texto, velocidad=1.0):
     try:
-        texto_limpio = texto.replace(ROJO, '').replace(VERDE, '').replace(AMARILLO, '').replace(AZUL, '').replace(MORADO, '').replace(CYAN, '').replace(SIN_COLOR, '')
-        subprocess.run(["termux-tts-speak", "-l", "es-ES", "-r", str(velocidad), texto_limpio], timeout=10)
+        # Eliminar códigos de color del texto
+        colores = [ROJO, VERDE, AMARILLO, AZUL, MORADO, CYAN, SIN_COLOR]
+        texto_limpio = texto
+        for color in colores:
+            texto_limpio = texto_limpio.replace(color, "")
+        subprocess.run(
+            ["termux-tts-speak", "-l", "es-ES", "-r", str(velocidad), texto_limpio],
+            timeout=10,
+        )
         return True
     except Exception as e:
         print(f"{ROJO}Error en síntesis de voz: {e}{SIN_COLOR}")
         return False
 
+
 def escuchar_voz():
     print(f"{CYAN}Escuchando...{SIN_COLOR}")
     hablar("Te escucho")
     try:
-        result = subprocess.run(["termux-speech-to-text", "-l", "es-ES"], capture_output=True, text=True, timeout=15)
+        result = subprocess.run(
+            ["termux-speech-to-text", "-l", "es-ES"],
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
         if result.returncode == 0 and result.stdout.strip():
             texto = result.stdout.strip()
             print(f"{VERDE}Escuché: {texto}{SIN_COLOR}")
@@ -78,6 +107,7 @@ def escuchar_voz():
         print(f"{ROJO}Error en reconocimiento de voz: {e}{SIN_COLOR}")
         hablar("Error en el micrófono")
         return None
+
 
 def mostrar_comandos_voz():
     ejemplos = [
@@ -96,25 +126,38 @@ def mostrar_comandos_voz():
         "  - 'graba audio'",
         "Control:",
         "  - 'ayuda' o 'comandos'",
-        "  - 'salir' o 'exit'"
+        "  - 'salir' o 'exit'",
     ]
     print(f"\n{AZUL}Comandos de Voz Disponibles:{SIN_COLOR}")
     for ejemplo in ejemplos:
         print(ejemplo)
     print()
 
+
 def pedir_comando(prompt):
-    data = {"contents": [{"parts": [{"text": PROMPT_SISTEMA + "\nUsuario: " + prompt}]}]}
+    data = {
+        "contents": [{"parts": [{"text": PROMPT_SISTEMA + "\nUsuario: " + prompt}]}]
+    }
     try:
-        r = requests.post(URL, headers={"Content-Type": "application/json"}, data=json.dumps(data), timeout=10)
+        r = requests.post(
+            URL,
+            headers={"Content-Type": "application/json"},
+            data=json.dumps(data),
+            timeout=10,
+        )
         r.raise_for_status()
         response = r.json()
     except Exception as e:
         return None, f"Error al conectar con la API: {e}"
     if "candidates" not in response:
-        return None, f"Respuesta inválida de la API:\n{json.dumps(response, indent=2)}"
-    cmd = response["candidates"][0]["content"]["parts"][0]["text"].strip()
+        resp_dump = json.dumps(response, indent=2)
+        return None, f"Respuesta inválida de la API:\n{resp_dump}"
+    # Obtener el comando del texto de la respuesta
+    content = response["candidates"][0]["content"]
+    parts = content["parts"][0]
+    cmd = parts["text"].strip()
     return cmd, None
+
 
 def ejecutar_comando(cmd):
     peligrosos = ["rm -rf", "mkfs", ":(){:|:&};:", "dd if=", ">:", "format", "delete"]
@@ -122,27 +165,34 @@ def ejecutar_comando(cmd):
         return "Comando bloqueado por seguridad."
     try:
         if cmd.startswith(("termux-", "am start", "pm ")):
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
+            result = subprocess.run(
+                cmd, shell=True, capture_output=True, text=True, timeout=30
+            )
         else:
-            result = subprocess.run(shlex.split(cmd), capture_output=True, text=True, timeout=20)
+            result = subprocess.run(
+                shlex.split(cmd), capture_output=True, text=True, timeout=20
+            )
         salida = result.stdout.strip()
         error = result.stderr.strip()
         if result.returncode == 0:
             if salida == "" and error == "":
                 return "Comando ejecutado correctamente."
             return (salida if salida else "") + ("\n" + error if error else "")
-        return f"Error (código {result.returncode}): {error if error else 'Sin mensaje de error'}"
+        error_msg = error if error else "Sin mensaje de error"
+        return f"Error (código {result.returncode}): {error_msg}"
     except subprocess.TimeoutExpired:
         return "El comando tardó demasiado y fue interrumpido."
     except Exception as e:
         return f"Error ejecutando el comando: {e}"
+
 
 def procesar_comando_voz(texto_voz):
     if any(palabra in texto_voz.lower() for palabra in ["ayuda", "comandos", "help"]):
         mostrar_comandos_voz()
         hablar("Te muestro los comandos disponibles")
         return
-    if any(palabra in texto_voz.lower() for palabra in ["salir", "exit", "cerrar", "terminar"]):
+    palabras_salida = ["salir", "exit", "cerrar", "terminar"]
+    if any(palabra in texto_voz.lower() for palabra in palabras_salida):
         print(f"{VERDE}Cerrando agente de voz...{SIN_COLOR}")
         hablar("Hasta luego")
         return "exit"
@@ -154,7 +204,12 @@ def procesar_comando_voz(texto_voz):
         hablar("Error al procesar tu solicitud")
         return
     print(f"{MORADO}Comando sugerido: {cmd}{SIN_COLOR}")
-    comandos_seguros = ["termux-battery-status", "termux-vibrate", "termux-open-url", "echo"]
+    comandos_seguros = [
+        "termux-battery-status",
+        "termux-vibrate",
+        "termux-open-url",
+        "echo",
+    ]
     if cmd and any(cmd.startswith(seguro) for seguro in comandos_seguros):
         confirmar = True
         print(f"{VERDE}Ejecutando automáticamente (comando seguro){SIN_COLOR}")
@@ -162,7 +217,10 @@ def procesar_comando_voz(texto_voz):
         print(f"{AMARILLO}¿Ejecutar este comando? Di 'sí' o 'no'{SIN_COLOR}")
         hablar("¿Ejecuto este comando?")
         confirmacion = escuchar_voz()
-        if confirmacion and any(palabra in confirmacion.lower() for palabra in ["sí", "si", "ok", "dale", "hazlo", "ejecuta"]):
+        if confirmacion and any(
+            palabra in confirmacion.lower()
+            for palabra in ["sí", "si", "ok", "dale", "hazlo", "ejecuta"]
+        ):
             confirmar = True
             print(f"{VERDE}Confirmado por voz{SIN_COLOR}")
         else:
@@ -185,6 +243,7 @@ def procesar_comando_voz(texto_voz):
             resultado_corto = salida[:100] if len(salida) > 100 else salida
             hablar(f"Resultado: {resultado_corto}")
 
+
 def main():
     print(f"{CYAN}Agente de Voz Termux-Android Iniciado{SIN_COLOR}")
     print("=" * 45)
@@ -196,10 +255,12 @@ def main():
     print(f"{VERDE}termux-api detectado correctamente{SIN_COLOR}")
     hablar("Agente de voz listo")
     mostrar_comandos_voz()
-    print(f"{CYAN}Di 'empezar' para activar el micrófono o 'salir' para terminar{SIN_COLOR}")
+    instruccion = "Di 'empezar' para activar el micrófono o 'salir' para terminar"
+    print(f"{CYAN}{instruccion}{SIN_COLOR}")
     while True:
         try:
-            entrada = input(f"\n{AZUL}>> Presiona Enter para hablar (o escribe 'salir'): {SIN_COLOR}")
+            prompt = f"\n{AZUL}>> Presiona Enter para hablar (o escribe 'salir'): {SIN_COLOR}"
+            entrada = input(prompt)
             if entrada.lower().strip() in ["salir", "exit", "quit"]:
                 print(f"{VERDE}Hasta luego{SIN_COLOR}")
                 hablar("Hasta luego")
@@ -218,8 +279,10 @@ def main():
             print(f"{ROJO}Error inesperado: {e}{SIN_COLOR}")
             hablar("Error inesperado")
 
+
 def modo_continuo():
-    print(f"{MORADO}Modo continuo activado - di 'agente' para activar{SIN_COLOR}")
+    msg = "Modo continuo activado - di 'agente' para activar"
+    print(f"{MORADO}{msg}{SIN_COLOR}")
     hablar("Modo continuo activado, di agente para hablar conmigo")
     while True:
         try:
@@ -237,6 +300,7 @@ def modo_continuo():
         except Exception as e:
             print(f"{ROJO}Error en modo continuo: {e}{SIN_COLOR}")
             time.sleep(2)
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "--continuo":
