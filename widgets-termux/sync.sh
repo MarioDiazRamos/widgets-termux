@@ -45,7 +45,8 @@ mkdir -p "$PREFIX_BIN"
 
 # Permisos amplios en todo el repositorio de Proyectos (lectura/escritura para usuario y ejecución donde aplique)
 chmod -R u+rwX,go+rX "$CARPETA_REPO" 2>/dev/null
-# Asegurar ejecutable en scripts comunes
+# Normalizar finales de línea (quitar CRLF) y asegurar ejecutables
+find "$CARPETA_REPO" -type f \( -name "*.sh" -o -name "*.py" \) -exec sed -i 's/\r$//' {} + 2>/dev/null
 find "$CARPETA_REPO" -type f \( -name "*.sh" -o -name "*.py" \) -exec chmod u+x {} + 2>/dev/null
 
 for s in "$CARPETA_WIDGETS"/*; do
