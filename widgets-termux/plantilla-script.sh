@@ -32,18 +32,16 @@ mostrar_encabezado() {
 
 # Función para verificar dependencias
 verificar_dependencias() {
-    local deps=("curl" "jq" "termux-notification")  # Personaliza según necesites
-    
+    # Ejemplo idempotente: instala solo si falta
+    source "$HOME/Proyectos/widgets-termux/lib/util_deps.sh" 2>/dev/null || true
+    local deps=(curl jq termux-notification)
     for dep in "${deps[@]}"; do
-        if ! command -v "$dep" &> /dev/null; then
-            mostrar_error "Dependencia faltante: $dep"
-            mostrar_info "Instala con: pkg install $dep"
-            return 1
-        fi
+        case "$dep" in
+            termux-notification) ensure_cmd termux-notification termux-api;;
+            *) ensure_cmd "$dep" "$dep";;
+        esac
     done
-    
     mostrar_exito "Dependencias verificadas"
-    return 0
 }
 
 # Función para solicitar input del usuario

@@ -11,10 +11,13 @@ error() { echo -e "${ROJO}$1${SIN_COLOR}"; }
 encabezado() { echo -e "${CYAN}$NOMBRE_SCRIPT v$VERSION${SIN_COLOR}\n"; }
 
 verificar_dependencias() {
-    local deps=(curl jq termux-location termux-notification) faltantes=()
-    for dep in "${deps[@]}"; do command -v "$dep" &>/dev/null || faltantes+=("$dep"); done
-    [ ${#faltantes[@]} -eq 0 ] && { exito "Dependencias verificadas"; return 0; }
-    error "Faltan: ${faltantes[*]}"; info "Instala: pkg install termux-api curl jq"; return 1;
+    # Instala solo si faltan
+    source "$HOME/Proyectos/widgets-termux/lib/util_deps.sh" 2>/dev/null || true
+    ensure_cmd curl curl
+    ensure_cmd jq jq
+    ensure_cmd termux-location termux-api
+    ensure_cmd termux-notification termux-api
+    exito "Dependencias verificadas"
 }
 
 obtener_ubicacion() {

@@ -1,5 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # Cambiar velocidad de un video sin bc
+source "$HOME/Proyectos/widgets-termux/lib/util_deps.sh" 2>/dev/null || true
+ensure_cmd ffmpeg ffmpeg
 
 
 solicitar_dato() {

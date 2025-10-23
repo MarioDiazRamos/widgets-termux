@@ -1,4 +1,8 @@
 #!/data/data/com.termux/files/usr/bin/bash
+source "$HOME/Proyectos/widgets-termux/lib/util_deps.sh" 2>/dev/null || true
+ensure_storage
+ensure_cmd ffmpeg ffmpeg
+command -v yt-dlp >/dev/null 2>&1 || python -m pip install --user yt-dlp >/dev/null 2>&1
 
 CARPETA_AUDIOS="/storage/emulated/0/Download"
 CARPETA_VIDEOS="/storage/emulated/0/Movies/Finales"

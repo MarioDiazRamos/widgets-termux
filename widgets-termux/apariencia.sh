@@ -1,12 +1,23 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 echo "Iniciando configuración de Termux..."
-pkg update -y && pkg upgrade -y
-pkg install -y git curl wget python neovim bat lsd micro mpv termux-api
-echo "alias ls='lsd -lah --icon=auto'" >> ~/.bashrc
-echo "alias ll='lsd -lah --icon=auto'" >> ~/.bashrc
-echo "alias la='lsd -a --icon=auto'" >> ~/.bashrc
-echo "alias cat='bat --paging=never'" >> ~/.bashrc
+
+# Instalar solo si faltan (idempotente)
+source "$HOME/Proyectos/widgets-termux/lib/util_deps.sh" 2>/dev/null || true
+ensure_cmd git git
+ensure_cmd curl curl
+ensure_cmd wget wget
+ensure_cmd python python
+ensure_cmd neovim neovim
+ensure_cmd bat bat
+ensure_cmd lsd lsd
+ensure_cmd micro micro
+ensure_cmd mpv mpv
+ensure_cmd termux-battery-status termux-api
+grep -q "alias ls='lsd -lah --icon=auto'" ~/.bashrc || echo "alias ls='lsd -lah --icon=auto'" >> ~/.bashrc
+grep -q "alias ll='lsd -lah --icon=auto'" ~/.bashrc || echo "alias ll='lsd -lah --icon=auto'" >> ~/.bashrc
+grep -q "alias la='lsd -a --icon=auto'" ~/.bashrc || echo "alias la='lsd -a --icon=auto'" >> ~/.bashrc
+grep -q "alias cat='bat --paging=never'" ~/.bashrc || echo "alias cat='bat --paging=never'" >> ~/.bashrc
 cat >> ~/.bashrc << 'EOF'
 RESET="\[\e[0m\]"
 BOLD="\[\e[1m\]"
@@ -18,7 +29,7 @@ CYAN="\[\e[36m\]"
 export PS1="${BOLD}${BLUE}\u@\h${RESET}:${BOLD}${GREEN}\w${RESET}\$ "
 EOF
 mkdir -p ~/.config/bat
-echo "truecolor" >> ~/.config/bat/config
+grep -q "truecolor" ~/.config/bat/config 2>/dev/null || echo "truecolor" >> ~/.config/bat/config
 mkdir -p ~/.config/micro/colorschemes
 curl -L https://raw.githubusercontent.com/zyedidia/micro/master/runtime/colorschemes/monokai.micro -o ~/.config/micro/colorschemes/monokai.micro
 EXPLORADOR="$HOME/explorador_prof.sh"

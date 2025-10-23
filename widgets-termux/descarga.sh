@@ -1,6 +1,12 @@
 
 #!/data/data/com.termux/files/usr/bin/bash
 
+# Dependencias idempotentes
+source "$HOME/Proyectos/widgets-termux/lib/util_deps.sh" 2>/dev/null || true
+ensure_storage
+ensure_cmd ffmpeg ffmpeg
+command -v yt-dlp >/dev/null 2>&1 || python -m pip install --user yt-dlp >/dev/null 2>&1
+
 solicitar_dato() {
   local mensaje="$1"
   local variable
@@ -67,7 +73,7 @@ echo "Elige el formato de descarga:"
 echo "1) Convertir a FLAC (máxima calidad de audio)"
 echo "2) Mantener formato original (más ligero, igual calidad)"
 echo
-echo "3) Actualizar librerías (ffmpeg y yt-dlp)"
+echo "3) Verificar/instalar dependencias (ffmpeg y yt-dlp)"
 OPCION=$(solicitar_dato "Opción [1/2/3]: ")
 
 CARPETA_DESTINO="/storage/emulated/0/Music/Descargas"
@@ -81,11 +87,10 @@ if [ "$OPCION" = "1" ]; then
 elif [ "$OPCION" = "2" ]; then
   descargar_audio "yt-dlp -f bestaudio $args_comunes" || descargar_fallback
 elif [ "$OPCION" = "3" ]; then
-  echo "Actualizando librerías ffmpeg y yt-dlp..."
-  pkg update -y && pkg upgrade -y
-  pkg install -y ffmpeg
-  pip install --upgrade yt-dlp
-  echo "Librerías actualizadas. Reinicia el script para intentar la descarga nuevamente."
+  echo "Verificando dependencias..."
+  ensure_cmd ffmpeg ffmpeg
+  command -v yt-dlp >/dev/null 2>&1 || python -m pip install --user yt-dlp
+  echo "Listo. Reinicia el script para intentar la descarga nuevamente."
   exit 0
 else
   echo "Opción no válida. Cancela la descarga."
