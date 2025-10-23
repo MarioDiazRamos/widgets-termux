@@ -10,7 +10,7 @@
    ```
 3. Sincroniza y actualiza usando solo:
    ```bash
-   bash ~/Proyectos/widgets-termux/sync.sh ahora
+   bash ~/Proyectos/widgets-termux/sync.sh
    ```
 4. Ejecuta los scripts desde la terminal o crea widgets.
 5. Si algún script requiere API key, sigue las instrucciones en pantalla la primera vez.
