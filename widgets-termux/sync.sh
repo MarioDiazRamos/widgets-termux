@@ -7,10 +7,29 @@ CARPETA_REPO="$HOME/Proyectos"
 CARPETA_WIDGETS="$CARPETA_REPO/widgets-termux"
 
 command -v git >/dev/null || { echo "Git no instalado. Ejecuta: pkg install git"; exit 1; }
+
+# --- Clonado/actualización robusta ---
+timestamp=$(date +%Y%m%d-%H%M%S 2>/dev/null || echo "now")
 if [ ! -d "$CARPETA_REPO/.git" ]; then
+    if [ -d "$CARPETA_REPO" ] && [ "$(ls -A \"$CARPETA_REPO\")" != "" ]; then
+        echo "Directorio existente y no es repo git. Moviendo a respaldo: $CARPETA_REPO.bak-$timestamp"
+        mv "$CARPETA_REPO" "$CARPETA_REPO.bak-$timestamp" || { echo "No se pudo respaldar carpeta existente"; exit 1; }
+    fi
     git clone "$REPO_URL" "$CARPETA_REPO" || { echo "Error al clonar repo"; exit 1; }
 else
-    cd "$CARPETA_REPO" && git pull origin main || git pull origin master || { echo "Error al actualizar repo"; exit 1; }
+    cd "$CARPETA_REPO" || { echo "No se pudo entrar a $CARPETA_REPO"; exit 1; }
+    git remote set-url origin "$REPO_URL" >/dev/null 2>&1 || true
+    git fetch origin || { echo "Error al hacer fetch"; exit 1; }
+    # Preferir main, si no existe usar master
+    if git rev-parse --verify origin/main >/dev/null 2>&1; then
+        git checkout -q main 2>/dev/null || git checkout -qb main || true
+        git reset --hard origin/main || { echo "Error al sincronizar con origin/main"; exit 1; }
+    elif git rev-parse --verify origin/master >/dev/null 2>&1; then
+        git checkout -q master 2>/dev/null || git checkout -qb master || true
+        git reset --hard origin/master || { echo "Error al sincronizar con origin/master"; exit 1; }
+    else
+        echo "No se encontró rama remota main/master"; exit 1
+    fi
 fi
 echo "Sincronización completada."
 
@@ -31,15 +50,33 @@ find "$CARPETA_REPO" -type f \( -name "*.sh" -o -name "*.py" \) -exec chmod u+x 
 
 for s in "$CARPETA_WIDGETS"/*; do
     [ ! -f "$s" ] && continue
-    chmod 755 "$s"
     nombre=$(basename "$s")
-    # Wrapper en .shortcuts
-    ln -sf "$s" "$CARPETA_SHORTCUTS/$nombre"
-    # Wrapper en bin (sin extensión)
-    nombre_bin="${nombre%.*}"
-    ln -sf "$s" "$CARPETA_BIN/$nombre_bin"
-    # Wrapper adicional en $PREFIX/bin para disponibilidad inmediata
-    ln -sf "$s" "$PREFIX_BIN/$nombre_bin"
+    ext="${nombre##*.}"
+    base="${nombre%.*}"
+
+    # Determinar destino en bin: para .sh usar nombre sin extensión, para .py omitir (usa su wrapper .sh), otros igual
+    case "$ext" in
+        sh)
+            target="$s"
+            nombre_bin="$base"
+            ;;
+        py)
+            # saltar .py para evitar ejecutar sin shebang; se espera wrapper .sh
+            ln -sf "$s" "$CARPETA_SHORTCUTS/$nombre"  # accesible desde widgets si se requiere
+            continue
+            ;;
+        *)
+            target="$s"
+            nombre_bin="$nombre"
+            ;;
+    esac
+
+    chmod 755 "$target"
+    # Wrapper en .shortcuts con el nombre original (incluida extensión)
+    ln -sf "$target" "$CARPETA_SHORTCUTS/$nombre"
+    # Wrapper en bin y PREFIX/bin con nombre_bin
+    ln -sf "$target" "$CARPETA_BIN/$nombre_bin"
+    ln -sf "$target" "$PREFIX_BIN/$nombre_bin"
 done
 
 echo "Permisos y accesos automáticos configurados."

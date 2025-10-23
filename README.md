@@ -25,7 +25,7 @@ Termux es una terminal Linux para Android: es muy poderosa y puede modificar arc
   ```bash
   bash ~/Proyectos/widgets-termux/sync.sh
   ```
-  Esto dará permisos en todo `~/Proyectos`, creará accesos y wrappers en `~/.shortcuts`, `~/bin` y también en `$PREFIX/bin` (para que funcionen de inmediato al escribir solo el nombre), añadirá `~/bin` al PATH y verificará dependencias básicas (sin forzar actualizaciones).
+  Esto dará permisos en todo `~/Proyectos`, creará accesos y wrappers en `~/.shortcuts`, `~/bin` y también en `$PREFIX/bin` (para que funcionen de inmediato al escribir solo el nombre), añadirá `~/bin` al PATH y verificará dependencias básicas (sin forzar actualizaciones). Si `~/Proyectos` existe pero no es un repositorio git, se respalda automáticamente y se vuelve a clonar.
 
 4. (Opcional) Ejecuta:
    ```bash
