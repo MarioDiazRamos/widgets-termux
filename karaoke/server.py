@@ -108,57 +108,61 @@ def log_trabajo(id_trabajo):
 
 # Transponer audio sobre video
 @app.route("/api/transponer", methods=["POST"])
-def transponer_audio():
-    datos = request.json or {}
-    video = datos.get("video")
-    audio = datos.get("audio")
-    intervalos = datos.get("intervals", "")
-    ganancia = float(datos.get("overlay_gain", 1.0))
+def _buscar_archivo_video(video_name):
+    """Busca un archivo de video por nombre."""
+    if isinstance(video_name, str) and video_name.startswith("/"):
+        return ruta_valida(video_name, [VIDEOS])
 
-    ruta_video = None
-    ruta_audio = None
-    if isinstance(video, str) and video.startswith("/"):
-        ruta_video = ruta_valida(video, [VIDEOS])
-    else:
-        for v in listar_archivos(VIDEOS, [".mp4"]):
-            if v["nombre"] == video:
-                ruta_video = v["ruta"]
-                break
-    if isinstance(audio, str) and audio.startswith("/"):
-        ruta_audio = ruta_valida(audio, [DESCARGAS])
-    else:
-        for a in listar_archivos(DESCARGAS, [".m4a", ".flac"]):
-            if a["nombre"] == audio:
-                ruta_audio = a["ruta"]
-                break
-    if not ruta_video or not ruta_audio:
-        return jsonify({"error": "video o audio no encontrado"}), 400
-    # Parsear intervalos
+    for v in listar_archivos(VIDEOS, [".mp4"]):
+        if v["nombre"] == video_name:
+            return v["ruta"]
+    return None
+
+
+def _buscar_archivo_audio(audio_name):
+    """Busca un archivo de audio por nombre."""
+    if isinstance(audio_name, str) and audio_name.startswith("/"):
+        return ruta_valida(audio_name, [DESCARGAS])
+
+    for a in listar_archivos(DESCARGAS, [".m4a", ".flac"]):
+        if a["nombre"] == audio_name:
+            return a["ruta"]
+    return None
+
+
+def _tiempo_a_segundos(tiempo_str):
+    """Convierte una cadena de tiempo a segundos."""
+    tiempo_str = tiempo_str.strip()
+    if ":" in tiempo_str:
+        partes = tiempo_str.split(":")
+        if len(partes) == 2:
+            m = float(partes[0])
+            s = float(partes[1])
+            return m * 60.0 + s
+    return float(tiempo_str)
+
+
+def _parsear_intervalos(intervalos_str):
+    """Parsea la cadena de intervalos y retorna una lista de tuplas (inicio, fin)."""
     segmentos = []
-    for raw in [s.strip() for s in intervalos.split(",") if s.strip()]:
+    for raw in [s.strip() for s in intervalos_str.split(",") if s.strip()]:
         if "-" not in raw:
             continue
         inicio_raw, fin_raw = raw.split("-", 1)
 
-        def a_segundos(x):
-            x = x.strip()
-            if ":" in x:
-                partes = x.split(":")
-                if len(partes) == 2:
-                    m = float(partes[0])
-                    s = float(partes[1])
-                    return m * 60.0 + s
-            return float(x)
-
         try:
-            ssec = a_segundos(inicio_raw)
-            esec = a_segundos(fin_raw)
+            ssec = _tiempo_a_segundos(inicio_raw)
+            esec = _tiempo_a_segundos(fin_raw)
         except Exception:
             continue
+
         if esec > ssec:
             segmentos.append((ssec, esec))
-    if not segmentos:
-        return jsonify({"error": "intervalos no válidos"}), 400
+    return segmentos
+
+
+def _generar_filtros_audio(segmentos, ganancia):
+    """Genera los filtros de audio para FFmpeg."""
     filtros = []
     cuenta = 0
     for ssec, esec in segmentos:
@@ -168,49 +172,58 @@ def transponer_audio():
             f"volume={ganancia},adelay={inicio_ms}|{inicio_ms}[s{cuenta}]"
         )
         cuenta += 1
+
     entradas_mix = "[0:a]" + "".join(f"[s{i}]" for i in range(cuenta))
     filtros.append(
         f"{entradas_mix}amix=inputs={cuenta+1}:duration=first:dropout_transition=0[aout]"
     )
-    filtro_complejo = ";".join(filtros)
-    base = os.path.splitext(os.path.basename(ruta_audio))[0]
-    salida = os.path.join(DESTINO, f"{base}_transpuesto_{int(time.time())}.mp4")
+    return ";".join(filtros)
+
+
+def _construir_comando_ffmpeg(ruta_video, ruta_audio, filtro_complejo, salida, datos):
+    """Construye el comando FFmpeg con los parámetros especificados."""
     calidad = datos.get("output_quality", "media")
     velocidad = datos.get("output_speed", "equilibrada")
     crf_map = {"alta": "18", "media": "23", "baja": "28"}
     preset_map = {"rapida": "veryfast", "equilibrada": "medium", "lenta": "slow"}
     crf = crf_map.get(calidad, "23")
     preset = preset_map.get(velocidad, "medium")
-    comando = [
-        "ffmpeg",
-        "-y",
-        "-ss",
-        "0",
-        "-i",
-        ruta_video,
-        "-ss",
-        "0",
-        "-i",
-        ruta_audio,
-        "-filter_complex",
-        filtro_complejo,
-        "-map",
-        "0:v",
-        "-map",
-        "[aout]",
-        "-c:v",
-        "libx264",
-        "-preset",
-        preset,
-        "-crf",
-        crf,
-        "-c:a",
-        "aac",
-        "-b:a",
-        "192k",
-        "-shortest",
-        salida,
+
+    return [
+        "ffmpeg", "-y", "-ss", "0", "-i", ruta_video,
+        "-ss", "0", "-i", ruta_audio, "-filter_complex", filtro_complejo,
+        "-map", "0:v", "-map", "[aout]", "-c:v", "libx264",
+        "-preset", preset, "-crf", crf, "-c:a", "aac",
+        "-b:a", "192k", "-shortest", salida,
     ]
+
+
+def transponer_audio():
+    datos = request.json or {}
+    video = datos.get("video")
+    audio = datos.get("audio")
+    intervalos = datos.get("intervals", "")
+    ganancia = float(datos.get("overlay_gain", 1.0))
+
+    # Buscar archivos
+    ruta_video = _buscar_archivo_video(video)
+    ruta_audio = _buscar_archivo_audio(audio)
+
+    if not ruta_video or not ruta_audio:
+        return jsonify({"error": "video o audio no encontrado"}), 400
+
+    # Parsear intervalos
+    segmentos = _parsear_intervalos(intervalos)
+    if not segmentos:
+        return jsonify({"error": "intervalos no válidos"}), 400
+
+    # Generar filtros y comando
+    filtro_complejo = _generar_filtros_audio(segmentos, ganancia)
+    base = os.path.splitext(os.path.basename(ruta_audio))[0]
+    salida = os.path.join(DESTINO, f"{base}_transpuesto_{int(time.time())}.mp4")
+    comando = _construir_comando_ffmpeg(ruta_video, ruta_audio, filtro_complejo, salida, datos)
+
+    # Crear trabajo
     id_trabajo = str(uuid.uuid4())
     with BLOQUEO_TRABAJOS:
         TRABAJOS[id_trabajo] = {
@@ -220,9 +233,11 @@ def transponer_audio():
             "inicio": time.time(),
             "estado": "ejecutando",
         }
+
     threading.Thread(
         target=ejecutar_subproceso, args=(comando, id_trabajo), daemon=True
     ).start()
+
     return jsonify({"id_trabajo": id_trabajo, "salida": salida})
 
 

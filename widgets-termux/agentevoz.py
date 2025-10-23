@@ -186,62 +186,96 @@ def ejecutar_comando(cmd):
         return f"Error ejecutando el comando: {e}"
 
 
-def procesar_comando_voz(texto_voz):
+def _manejar_comandos_especiales(texto_voz):
+    """Maneja comandos especiales como ayuda o salir."""
     if any(palabra in texto_voz.lower() for palabra in ["ayuda", "comandos", "help"]):
         mostrar_comandos_voz()
         hablar("Te muestro los comandos disponibles")
-        return
+        return "help"
+
     palabras_salida = ["salir", "exit", "cerrar", "terminar"]
     if any(palabra in texto_voz.lower() for palabra in palabras_salida):
         print(f"{VERDE}Cerrando agente de voz...{SIN_COLOR}")
         hablar("Hasta luego")
         return "exit"
-    print(f"{AZUL}Procesando: {texto_voz}{SIN_COLOR}")
-    hablar("Procesando tu solicitud")
-    cmd, error = pedir_comando(texto_voz)
-    if error:
-        print(f"{ROJO}{error}{SIN_COLOR}")
-        hablar("Error al procesar tu solicitud")
-        return
-    print(f"{MORADO}Comando sugerido: {cmd}{SIN_COLOR}")
+
+    return None
+
+
+def _es_comando_seguro(cmd):
+    """Verifica si un comando es considerado seguro para ejecución automática."""
     comandos_seguros = [
         "termux-battery-status",
         "termux-vibrate",
         "termux-open-url",
         "echo",
     ]
-    if cmd and any(cmd.startswith(seguro) for seguro in comandos_seguros):
+    return cmd and any(cmd.startswith(seguro) for seguro in comandos_seguros)
+
+
+def _obtener_confirmacion_usuario():
+    """Solicita confirmación del usuario por voz."""
+    print(f"{AMARILLO}¿Ejecutar este comando? Di 'sí' o 'no'{SIN_COLOR}")
+    hablar("¿Ejecuto este comando?")
+    confirmacion = escuchar_voz()
+
+    palabras_confirmacion = ["sí", "si", "ok", "dale", "hazlo", "ejecuta"]
+    if confirmacion and any(palabra in confirmacion.lower() for palabra in palabras_confirmacion):
+        print(f"{VERDE}Confirmado por voz{SIN_COLOR}")
+        return True
+    else:
+        print(f"{AMARILLO}Cancelado{SIN_COLOR}")
+        hablar("Comando cancelado")
+        return False
+
+
+def _ejecutar_y_reportar_comando(cmd):
+    """Ejecuta el comando y reporta el resultado al usuario."""
+    print(f"{CYAN}Ejecutando...{SIN_COLOR}")
+    salida = ejecutar_comando(cmd)
+    print(f"{VERDE}Resultado: {salida}{SIN_COLOR}")
+
+    if "ejecutado correctamente" in salida:
+        hablar("Comando ejecutado correctamente")
+    elif "error" in salida:
+        hablar("Hubo un error al ejecutar el comando")
+    elif "advertencia" in salida:
+        hablar("Comando ejecutado con advertencias")
+    else:
+        resultado_corto = salida[:100] if len(salida) > 100 else salida
+        hablar(f"Resultado: {resultado_corto}")
+
+
+def procesar_comando_voz(texto_voz):
+    # Manejar comandos especiales primero
+    resultado_especial = _manejar_comandos_especiales(texto_voz)
+    if resultado_especial:
+        return resultado_especial
+
+    # Procesar comando normal
+    print(f"{AZUL}Procesando: {texto_voz}{SIN_COLOR}")
+    hablar("Procesando tu solicitud")
+
+    cmd, error = pedir_comando(texto_voz)
+    if error:
+        print(f"{ROJO}{error}{SIN_COLOR}")
+        hablar("Error al procesar tu solicitud")
+        return
+
+    print(f"{MORADO}Comando sugerido: {cmd}{SIN_COLOR}")
+
+    # Determinar si necesita confirmación
+    if _es_comando_seguro(cmd):
         confirmar = True
         print(f"{VERDE}Ejecutando automáticamente (comando seguro){SIN_COLOR}")
     elif cmd:
-        print(f"{AMARILLO}¿Ejecutar este comando? Di 'sí' o 'no'{SIN_COLOR}")
-        hablar("¿Ejecuto este comando?")
-        confirmacion = escuchar_voz()
-        if confirmacion and any(
-            palabra in confirmacion.lower()
-            for palabra in ["sí", "si", "ok", "dale", "hazlo", "ejecuta"]
-        ):
-            confirmar = True
-            print(f"{VERDE}Confirmado por voz{SIN_COLOR}")
-        else:
-            confirmar = False
-            print(f"{AMARILLO}Cancelado{SIN_COLOR}")
-            hablar("Comando cancelado")
+        confirmar = _obtener_confirmacion_usuario()
     else:
         confirmar = False
+
+    # Ejecutar si está confirmado
     if confirmar and cmd:
-        print(f"{CYAN}Ejecutando...{SIN_COLOR}")
-        salida = ejecutar_comando(cmd)
-        print(f"{VERDE}Resultado: {salida}{SIN_COLOR}")
-        if "ejecutado correctamente" in salida:
-            hablar("Comando ejecutado correctamente")
-        elif "error" in salida:
-            hablar("Hubo un error al ejecutar el comando")
-        elif "advertencia" in salida:
-            hablar("Comando ejecutado con advertencias")
-        else:
-            resultado_corto = salida[:100] if len(salida) > 100 else salida
-            hablar(f"Resultado: {resultado_corto}")
+        _ejecutar_y_reportar_comando(cmd)
 
 
 def main():
