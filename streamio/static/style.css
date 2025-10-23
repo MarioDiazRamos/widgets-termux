@@ -1,0 +1,5 @@
+body { background: #181a1b; color: #f8f9fa; }
+.card { background: #23272b; border: none; }
+.btn-primary, .btn-success, .btn-warning { border: none; }
+input, .form-control { background: #23272b; color: #f8f9fa; border: 1px solid #444; }
+input:focus, .form-control:focus { background: #23272b; color: #fff; border: 1px solid #007bff; }
