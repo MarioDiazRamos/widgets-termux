@@ -40,7 +40,7 @@ Para dudas, consulta INSTRUCCIONES-CONFIGURACION.md o abre un issue en el reposi
 
 ```bash
 # Sincronizar y actualizar scripts
-~/sincronizar-widgets.sh
+~/sync.sh
 
 # Ejecutar scripts disponibles
 ~/descarga.sh
