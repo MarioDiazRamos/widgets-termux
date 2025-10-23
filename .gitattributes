@@ -1,7 +1,0 @@
-# Enforce LF endings for scripts and text to avoid CRLF issues on Android/Termux
-*.sh text eol=lf
-*.py text eol=lf
-*.md text eol=lf
-*.html text eol=lf
-*.css text eol=lf
-*.js text eol=lf
