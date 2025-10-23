@@ -4,6 +4,7 @@ import os
 import re
 import socket
 import subprocess
+import threading
 import time
 import logging
 from flask import Flask, request, jsonify, send_from_directory
@@ -88,7 +89,6 @@ def stream():
             logging.error(f"No se pudo iniciar stream para magnet: {magnet}")
             return jsonify({"error": "No se pudo iniciar stream"}), 500
         # Obtener IP local (no localhost)
-        import socket
 
         ip_local = None
         try:
@@ -165,8 +165,6 @@ def _lanzar_peerflix_idx(magnet, file_idx):
             except Exception as e:
                 logging.error(f"Error limpiando archivos temporales: {e}")
 
-        import threading
-
         threading.Thread(target=cleanup_temp, daemon=True).start()
         return real_port
     except Exception as e:
@@ -220,8 +218,6 @@ def _lanzar_peerflix(magnet):
                         os.remove(os.path.join(root, f))
             except Exception as e:
                 logging.error(f"Error limpiando archivos temporales: {e}")
-
-        import threading
 
         threading.Thread(target=cleanup_temp, daemon=True).start()
         # Dejar peerflix corriendo en background
