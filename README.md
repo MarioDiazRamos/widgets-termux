@@ -2,6 +2,13 @@
 
 Este repositorio contiene scripts y utilidades para automatizar Termux en Android.
 
+## Termux: descarga rápida y aviso
+
+- Descarga desde F‑Droid: https://f-droid.org/en/packages/com.termux/
+- APK directo (versión estable): https://f-droid.org/repo/com.termux_1022.apk
+
+Termux es una terminal Linux para Android: es muy poderosa y puede modificar archivos del dispositivo. Úsalo bajo tu responsabilidad, haz respaldo de tus datos y revisa los scripts antes de ejecutarlos.
+
 
 ## Instalación y uso 
 
