@@ -3,8 +3,8 @@
 # Dependencias idempotentes
 source "$HOME/Proyectos/widgets-termux/lib/util_deps.sh" 2>/dev/null || true
 ensure_storage
-
 ensure_cmd ffmpeg ffmpeg
+export PATH="$HOME/.local/bin:$PATH"
 command -v yt-dlp >/dev/null 2>&1 || python -m pip install --user yt-dlp >/dev/null 2>&1
 
 # Verificar y actualizar yt-dlp solo si hay una versión nueva
