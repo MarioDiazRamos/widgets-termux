@@ -9,7 +9,7 @@ command -v yt-dlp >/dev/null 2>&1 || python -m pip install --user yt-dlp >/dev/n
 solicitar_dato() {
   local mensaje="$1"
   local variable
-  read -p "$mensaje" variable
+  read -r -p "$mensaje" variable
   echo "$variable"
 }
 
@@ -19,7 +19,7 @@ animar_barra() {
   local paso=0
   while :; do
     local barra=""
-    for ((i=0; i<$ancho; i++)); do
+  for ((i=0; i<ancho; i++)); do
       if (( i < paso )); then
         barra+="="
       elif (( i == paso )); then
@@ -36,11 +36,11 @@ animar_barra() {
 
 
 descargar_audio() {
-  local comando="$1"
-  echo "Ejecutando: $comando" >> "$ARCHIVO_LOG"
+  local -a comando=("$@")
+  echo "Ejecutando: ${comando[*]}" >> "$ARCHIVO_LOG"
   animar_barra &
   local pid_barra=$!
-  eval "$comando" >> "$ARCHIVO_LOG" 2>&1
+  "${comando[@]}" >> "$ARCHIVO_LOG" 2>&1
   kill $pid_barra 2>/dev/null
   wait $pid_barra 2>/dev/null
   printf "\r%-60s\n" ""
@@ -53,13 +53,20 @@ descargar_fallback() {
   mejor_linea=$(yt-dlp -F "$URL_YOUTUBE" 2>/dev/null | grep "audio only" | sort -k3 -nr | head -n 1)
   mejor_id=$(echo "$mejor_linea" | awk '{print $1}')
   info=$(echo "$mejor_linea" | awk '{$1=""; print $0}')
-  args_comunes="--embed-thumbnail --add-metadata --metadata-from-title '%(artist)s - %(title)s' --yes-playlist -o '$CARPETA_DESTINO/%(artist,NA=Varios)s - %(title)s.%(ext)s' '$URL_YOUTUBE'"
+  local args_comunes=(
+    --embed-thumbnail
+    --add-metadata
+    --metadata-from-title '%(artist)s - %(title)s'
+    --yes-playlist
+    -o "$CARPETA_DESTINO/%(artist,NA=Varios)s - %(title)s.%(ext)s"
+    "$URL_YOUTUBE"
+  )
   if [ -n "$mejor_id" ]; then
     echo "Usando formato alternativo: ID: $mejor_id | Info:$info" | tee -a "$ARCHIVO_LOG"
     if [ "$OPCION" = "1" ]; then
-      yt-dlp -f "$mejor_id" -x --audio-format flac $args_comunes >> "$ARCHIVO_LOG" 2>&1
+      yt-dlp -f "$mejor_id" -x --audio-format flac "${args_comunes[@]}" >> "$ARCHIVO_LOG" 2>&1
     else
-      yt-dlp -f "$mejor_id" $args_comunes >> "$ARCHIVO_LOG" 2>&1
+      yt-dlp -f "$mejor_id" "${args_comunes[@]}" >> "$ARCHIVO_LOG" 2>&1
     fi
   else
     echo "No se encontró ningún formato alternativo." | tee -a "$ARCHIVO_LOG"
@@ -78,13 +85,20 @@ OPCION=$(solicitar_dato "Opción [1/2/3]: ")
 CARPETA_DESTINO="/storage/emulated/0/Music/Descargas"
 mkdir -p "$CARPETA_DESTINO"
 ARCHIVO_LOG="$CARPETA_DESTINO/descarga.log"
-> "$ARCHIVO_LOG"
+: > "$ARCHIVO_LOG"
 
-args_comunes="--embed-thumbnail --add-metadata --metadata-from-title '%(artist)s - %(title)s' --yes-playlist -o '$CARPETA_DESTINO/%(artist,NA=Varios)s - %(title)s.%(ext)s' '$URL_YOUTUBE'"
+args_comunes=(
+  --embed-thumbnail
+  --add-metadata
+  --metadata-from-title '%(artist)s - %(title)s'
+  --yes-playlist
+  -o "$CARPETA_DESTINO/%(artist,NA=Varios)s - %(title)s.%(ext)s"
+  "$URL_YOUTUBE"
+)
 if [ "$OPCION" = "1" ]; then
-  descargar_audio "yt-dlp -f bestaudio -x --audio-format flac $args_comunes" || descargar_fallback
+  descargar_audio yt-dlp -f 'bestaudio/best' --force-ipv4 -x --audio-format flac "${args_comunes[@]}" || descargar_fallback
 elif [ "$OPCION" = "2" ]; then
-  descargar_audio "yt-dlp -f bestaudio $args_comunes" || descargar_fallback
+  descargar_audio yt-dlp -f 'bestaudio/best' --force-ipv4 "${args_comunes[@]}" || descargar_fallback
 elif [ "$OPCION" = "3" ]; then
   echo "Verificando dependencias..."
   ensure_cmd ffmpeg ffmpeg
