@@ -3,8 +3,24 @@
 # Dependencias idempotentes
 source "$HOME/Proyectos/widgets-termux/lib/util_deps.sh" 2>/dev/null || true
 ensure_storage
+
 ensure_cmd ffmpeg ffmpeg
 command -v yt-dlp >/dev/null 2>&1 || python -m pip install --user yt-dlp >/dev/null 2>&1
+
+# Verificar y actualizar yt-dlp solo si hay una versión nueva
+actualizar_ytdlp_si_es_necesario() {
+  local version_local version_remota
+  version_local=$(yt-dlp --version 2>/dev/null)
+  version_remota=$(python -m pip index versions yt-dlp 2>/dev/null | grep -Eo 'Available versions:.*' | head -n1 | grep -Eo '[0-9.]+')
+  if [ -n "$version_local" ] && [ -n "$version_remota" ]; then
+    if [ "$version_local" != "$version_remota" ]; then
+      echo "Actualizando yt-dlp de $version_local a $version_remota..."
+      python -m pip install --upgrade --user yt-dlp
+    fi
+  fi
+}
+
+actualizar_ytdlp_si_es_necesario
 
 solicitar_dato() {
   local mensaje="$1"
